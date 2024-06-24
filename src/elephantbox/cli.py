@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from math import sqrt
+from math import atan, ceil, cos, log, sin, sqrt
 from typing import NamedTuple, Optional, Sequence
+
 import drawsvg as draw
 import logging
 
@@ -15,11 +16,13 @@ class DEFAULTS(NamedTuple):
     CARD_WIDTH = 2.5
     CARD_HEIGHT = 3.5
     CARD_WIGGLE = 0.1
-    DECK_THICKNESS = 1.5
-    CORNER_SAVER = 0.25
+    DECK_THICKNESS = 1.75
+    CORNER_SAVER = 0.125
     SLIVER = 0.05
     FLAP_THICKNESS = 1
     NOSE_WIDTH = 1.5
+    MAX_DASH_LENGTH = 1 / 25
+    DASH_PERIOD = 1 / 5
 
 
 def randColor(lower: int = 0, upper: int = 255):
@@ -67,8 +70,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument(
         "--deck-thickness",
         type=float,
-        default=2,
-        # default=DEFAULTS.DECK_THICKNESS,
+        default=DEFAULTS.DECK_THICKNESS,
     )
     parser.add_argument(
         "--corner-saver",
@@ -83,14 +85,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument(
         "--flap-thickness",
         type=float,
-        default=1.5,
-        # default=DEFAULTS.FLAP_THICKNESS,
+        default=DEFAULTS.FLAP_THICKNESS,
     )
     parser.add_argument(
         "--nose-width",
         type=float,
-        default=1.25,
-        # default=DEFAULTS.NOSE_WIDTH,
+        default=DEFAULTS.NOSE_WIDTH,
+    )
+
+    parser.add_argument(
+        "--max-dash-length",
+        type=float,
+        default=DEFAULTS.MAX_DASH_LENGTH,
+    )
+    parser.add_argument(
+        "--dash-period",
+        type=float,
+        default=DEFAULTS.DASH_PERIOD,
     )
 
     args = parser.parse_args(argv)
@@ -207,6 +218,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             NoseWidth * sqrt(2) / 4,
         )
 
+    def RotatedSize():
+        (x1, y1) = DiagonalTopLeft()
+        (x2, y2) = DiagonalBottomRight()
+
+        dx = abs(x1 - x2)
+        dy = abs(y1 - y2)
+
+        return (dx + dy) * sqrt(2) / 2
+
     MidHorizontal = 0
 
     stats = {
@@ -235,10 +255,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "DiagonalTopLeft() y     ": DiagonalTopLeft()[1] / inch,
         "DiagonalBottomRight() x ": DiagonalBottomRight()[0] / inch,
         "DiagonalBottomRight() y ": DiagonalBottomRight()[1] / inch,
+        "RotatedSize()           ": RotatedSize() / inch,
     }
 
     if args.laser_bed_width * inch < NoseTipEnd():
         logging.warn("Nose outside of bounds")
+        if RotatedSize() < args.laser_bed_width * inch:
+            logging.info("  Might fit width rotated 45 degrees")
+        if RotatedSize() < args.laser_bed_height * inch:
+            logging.info("  Might fit height rotated 45 degrees")
 
     logging.info(f"\n{pformat(stats, sort_dicts=False, indent=2)}")
 
@@ -260,6 +285,63 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         (x, y, w, h) = (x1, y1, x2 - x1, y2 - y1)
         # print("rect", x, y, w, h)
         return draw.Rectangle(x, y, w, h, fill=color, stroke="black")
+
+    def dasher(
+        start: tuple[float, float],
+        end: tuple[float, float],
+        max_dash_length: float,
+        period: float,
+    ) -> list:
+        dx = end[0] - start[0]
+        dy = end[1] - start[1]
+
+        if dx == 0:
+            # logging.warn("Bailing out for divide by zero")
+            dx = 0.00001
+            # return []
+        direction = atan(dy / dx)
+
+        actual_length = sqrt(pow(dx, 2) + pow(dy, 2))
+
+        period_count = ceil((actual_length - max_dash_length) / period)
+        max_length = max_dash_length + period_count * period
+        scale_factor = actual_length / max_length
+        actual_dash_length = max_dash_length * scale_factor
+        actual_period = period * scale_factor
+
+        adl_x = actual_dash_length * cos(direction)
+        adl_y = actual_dash_length * sin(direction)
+
+        ap_x = actual_period * cos(direction)
+        ap_y = actual_period * sin(direction)
+
+        dashes = []
+        # print("+++++++")
+        for n in range(period_count + 1):
+            this_dash_start_x = start[0] + n * ap_x
+            this_dash_start_y = start[1] + n * ap_y
+            this_dash_end_x = this_dash_start_x + adl_x
+            this_dash_end_y = this_dash_start_y + adl_y
+
+            # print(
+            #     this_dash_start_x,
+            #     this_dash_start_y,
+            #     this_dash_end_x,
+            #     this_dash_end_y,
+            # )
+
+            dashes.append(
+                draw.Line(
+                    this_dash_start_x,
+                    this_dash_start_y,
+                    this_dash_end_x,
+                    this_dash_end_y,
+                    stroke="green",
+                    stroke_width=1,
+                )
+            )
+
+        return dashes
 
     def randFillAttrs():
         return {
@@ -456,10 +538,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         foldList: list[tuple[tuple, tuple]] = [
             (
                 (
-                    CardwellVerticalRails[3] - DiagonalCornerSaver(),
-                    CardwellHorizontalRails[3] - DiagonalCornerSaver(),
-                ),
-                (
                     CardwellVerticalRails[3]
                     - DiagonalDeckThickness()
                     + DiagonalCornerSaver(),
@@ -467,12 +545,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     - DiagonalDeckThickness()
                     + DiagonalCornerSaver(),
                 ),
-            ),
-            (
                 (
                     CardwellVerticalRails[3] - DiagonalCornerSaver(),
-                    CardwellHorizontalRails[6] + DiagonalCornerSaver(),
+                    CardwellHorizontalRails[3] - DiagonalCornerSaver(),
                 ),
+            ),
+            (
                 (
                     CardwellVerticalRails[3]
                     - DiagonalDeckThickness()
@@ -480,6 +558,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     CardwellHorizontalRails[6]
                     + DiagonalDeckThickness()
                     - DiagonalCornerSaver(),
+                ),
+                (
+                    CardwellVerticalRails[3] - DiagonalCornerSaver(),
+                    CardwellHorizontalRails[6] + DiagonalCornerSaver(),
                 ),
             ),
             # # # # # # #
@@ -643,7 +725,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 stroke_width=2,
             )
             foldLine.M(*fl[0]).L(*fl[1])
-            drawing.append(foldLine)
+            # drawing.append(foldLine)
+            for d in dasher(
+                *fl,
+                args.max_dash_length * inch,
+                args.dash_period * inch,
+            ):
+                drawing.append(d)
 
     def cutInnerlines():
         cutList = [
@@ -668,25 +756,25 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             foldLine.M(*cl[0]).L(*cl[1])
             drawing.append(foldLine)
 
-    guideGrid()
+    # guideGrid()
     cutOuterLine()
     foldLines()
     cutInnerlines()
 
-    drawing.append(
-        draw.Circle(
-            *DiagonalTopLeft(),
-            0.1 * inch,
-            **randFillAttrs(),
-        )
-    )
-    drawing.append(
-        draw.Circle(
-            *DiagonalBottomRight(),
-            0.1 * inch,
-            **randFillAttrs(),
-        )
-    )
+    # drawing.append(
+    #     draw.Circle(
+    #         *DiagonalTopLeft(),
+    #         0.1 * inch,
+    #         **randFillAttrs(),
+    #     )
+    # )
+    # drawing.append(
+    #     draw.Circle(
+    #         *DiagonalBottomRight(),
+    #         0.1 * inch,
+    #         **randFillAttrs(),
+    #     )
+    # )
 
     drawing.set_pixel_scale(0.75)
     drawing.save_svg("example.svg")

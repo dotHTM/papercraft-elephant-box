@@ -700,7 +700,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             ),
         ]
 
-        if 0 < HeadWidth() - NoseWidth - 2 * CornerSaver:
+        if 0 < HeadHeight() - NoseWidth - 2 * CornerSaver:
             foldList.extend(
                 [
                     # Face flap

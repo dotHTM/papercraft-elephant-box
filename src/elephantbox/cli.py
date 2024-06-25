@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import atan, ceil, cos, log, sin, sqrt
+from math import atan, ceil, cos, sin, sqrt
 from typing import NamedTuple, Optional, Sequence
 
 import drawsvg as draw
@@ -227,8 +227,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         return (dx + dy) * sqrt(2) / 2
 
-    MidHorizontal = 0
-
     stats = {
         "CardWellWidth           ": CardWellWidth / inch,
         "CardWellHeight          ": CardWellHeight / inch,
@@ -265,20 +263,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if RotatedSize() < args.laser_bed_height * inch:
             logging.info("  Might fit height rotated 45 degrees")
 
-    logging.info(f"\n{pformat(stats, sort_dicts=False, indent=2)}")
-
-    margin = 0.5 * inch
+    logging.debug(f"\n{pformat(stats, sort_dicts=False, indent=2)}")
 
     OuterBoundsWidth = max([args.laser_bed_width * inch, NoseTipEnd()])
     OuterBoundsHeight = max(
         [args.laser_bed_height * inch, (CardWellHeight / 2 + DeckThickness)]
     )
 
-    logging.info(f"( {OuterBoundsWidth/inch}, {OuterBoundsHeight/inch} )")
+    logging.info(
+        f"( {OuterBoundsWidth/inch}, {OuterBoundsHeight/inch} ), {NoseTipEnd()/inch}, {RotatedSize()/inch}"
+    )
 
     drawing = draw.Drawing(
-        *(OuterBoundsWidth, OuterBoundsHeight),
-        origin=(0, -(OuterBoundsHeight / 2)),
+        *("100%", "100%"),
+        viewBox=f"{0} {-(OuterBoundsHeight / 2)} {OuterBoundsWidth} {OuterBoundsHeight}",
     )
 
     def rect(x1, y1, x2, y2, color):

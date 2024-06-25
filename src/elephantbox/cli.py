@@ -437,11 +437,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
 
     def cutOuterLine():
-        cutOuterline = draw.Path(fill="#eeeeffa0", stroke="black")
+        cutPath = draw.Path(
+            fill="#eeeeffa0",
+            stroke="black",
+            stroke_width=2,
+        )
 
         # # Body
         (
-            cutOuterline.M(CardwellVerticalRails[9], CardwellHorizontalRails[3])
+            cutPath.M(CardwellVerticalRails[9], CardwellHorizontalRails[3])
             .A(
                 *(DeckThickness, DeckThickness),
                 *(0, 0, 0),
@@ -469,7 +473,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         # head
         (
-            cutOuterline.L(NeckBase(), HeadHeight() / 2)
+            cutPath.L(NeckBase(), HeadHeight() / 2)
             ##
             .L(
                 EarStart(),
@@ -528,9 +532,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
 
         # close off
-        cutOuterline.Z()
+        cutPath.Z()
 
-        drawing.append(cutOuterline)
+        drawing.append(cutPath)
 
     def foldLines():
         foldList: list[tuple[tuple, tuple]] = [

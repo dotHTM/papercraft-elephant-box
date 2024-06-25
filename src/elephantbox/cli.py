@@ -21,7 +21,7 @@ class DEFAULTS(NamedTuple):
     SLIVER = 0.05
     FLAP_THICKNESS = 1
     NOSE_WIDTH = 1.5
-    MAX_DASH_LENGTH = 1 / 25
+    MAX_DASH_LENGTH = 1 / 30
     DASH_PERIOD = 1 / 5
 
 
@@ -33,14 +33,17 @@ def randColor(lower: int = 0, upper: int = 255):
 def main(argv: Optional[Sequence[str]] = None) -> int:
     import argparse
 
-    print("\n" * 20)
+    # print("\n" * 20)
 
     logging.basicConfig(
         format="%(levelname)s %(asctime)s | %(message)s", level=logging.INFO
     )
 
     parser = argparse.ArgumentParser()
-
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+    )
     parser.add_argument(
         "--laser-bed-width",
         type=float,
@@ -51,7 +54,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         type=float,
         default=DEFAULTS.LASER_BED_HEIGHT,
     )
-
     parser.add_argument(
         "--card-width",
         type=float,
@@ -103,11 +105,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         type=float,
         default=DEFAULTS.DASH_PERIOD,
     )
-
+    parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=str,
+    )
     args = parser.parse_args(argv)
 
     # Constant
-    inch = 72
+    inch = 300
 
     # Defined
 
@@ -335,7 +342,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     this_dash_end_x,
                     this_dash_end_y,
                     stroke="green",
-                    stroke_width=1,
+                    stroke_width=2,
                 )
             )
 
@@ -778,9 +785,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     #     )
     # )
 
-    drawing.set_pixel_scale(0.75)
-    drawing.save_svg("example.svg")
-    drawing.save_png("example.png")
+    # drawing.set_pixel_scale(1)
+    # drawing.save_png(f"{args.output}.png")
+    drawing.save_svg(f"{args.output}.svg")
 
     return 0
 

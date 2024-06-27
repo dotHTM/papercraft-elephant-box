@@ -24,7 +24,7 @@ class DEFAULTS(NamedTuple):
     LASER_BED_HEIGHT = 12 * UNITS.INCH
     BOTTOM_WIDTH = 2.5 * UNITS.INCH
     BOTTOM_HEIGHT = 3.5 * UNITS.INCH
-    BOTTOM_WIGGLE = 0.2 * UNITS.INCH
+    BOTTOM_WIGGLE = 0.15 * UNITS.INCH
     BOX_TALL = 1.5 * UNITS.INCH
     CORNER_SAVER = 0.125 * UNITS.INCH
     CARDSTOCK_THICKNESS = 0.05 * UNITS.INCH
@@ -32,6 +32,8 @@ class DEFAULTS(NamedTuple):
     NOSE_WIDTH = 1.5 * UNITS.INCH
     MAX_DASH_LENGTH = 1 / 30 * UNITS.INCH
     DASH_PERIOD = 1 / 5 * UNITS.INCH
+
+    SUPPORT_THICKNESS = 0.5 * UNITS.INCH
 
     DEBUG_OFFSET = 0.2 * UNITS.INCH
 
@@ -80,6 +82,25 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         action="store_true",
         help="Use millimeters instead of inches.",
     )
+
+    box_options = parser.add_argument_group("Box Options")
+    box_options.add_argument(
+        "--supports",
+        action="store_true",
+    )
+    box_options.add_argument(
+        "--back-support",
+        action="store_true",
+    )
+    box_options.add_argument(
+        "--side-support",
+        action="store_true",
+    )
+    box_options.add_argument(
+        "--no-nose",
+        action="store_true",
+    )
+
     box_dimensions = parser.add_argument_group("Box Dimensions (user units)")
     box_dimensions_points = parser.add_argument_group("Box Dimensions (Points)")
 
@@ -129,6 +150,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             ("--nose-width", "-n"),
             DEFAULTS.NOSE_WIDTH,
             {"help": "Tuck flap tab width."},
+        ),
+        (
+            ("--support-thickness",),
+            DEFAULTS.SUPPORT_THICKNESS,
+            {},
         ),
     ]:
         box_dimensions.add_argument(*p[0], metavar="FLOAT", type=float, **p[2])
@@ -257,9 +283,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "nose_width",
         "max_dash_length",
         "dash_period",
+        "support_thickness",
     ]:
         if hasattr(args, key) and getattr(args, key) is not None:
             setattr(args, f"{key}_points", getattr(args, key) * unit)
+
+    if args.supports:
+        args.back_support = True
+        args.side_support = True
 
     # Defined
 
@@ -270,6 +301,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     CardstockThickness_Pt = args.cardstock_thickness_points
     FlapThickness_Pt = args.flap_thickness_points
     NoseWidth_Pt = args.nose_width_points
+    SupportThickness = args.support_thickness_points
 
     # Calculated
 
@@ -304,12 +336,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return FlapThickness_Pt / 2
 
     def NoseTipEnd_Pt():
-        return (
-            NeckBase_Pt()
-            + HeadWidth_Pt()
-            + FlapThickness_Pt * 2
-            + NoseWidth_Pt / 2
-        )
+        ret = NeckBase_Pt() + HeadWidth_Pt() + FlapThickness_Pt
+        if not args.no_nose:
+            ret += FlapThickness_Pt + NoseWidth_Pt / 2
+        return ret
 
     # Checks
 
@@ -340,29 +370,29 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         logging.warn(f"NoseWidth_Pt smaller than {CornerSaver_Pt/unit=}.")
 
     CardwellVerticalRails = [
-        0,  #                                                   0 -
-        CornerSaver_Pt,  #                                         1
-        DeckThickness_Pt - CornerSaver_Pt,  #                         2
-        DeckThickness_Pt,  #                                       3 -
-        DeckThickness_Pt + CornerSaver_Pt,  #                         4
-        DeckThickness_Pt + BottomWellWidth_Pt - CornerSaver_Pt,  #         5
+        0,  #                                                           0 -
+        CornerSaver_Pt,  #                                              1
+        DeckThickness_Pt - CornerSaver_Pt,  #                           2
+        DeckThickness_Pt,  #                                            3 -
+        DeckThickness_Pt + CornerSaver_Pt,  #                           4
+        DeckThickness_Pt + BottomWellWidth_Pt - CornerSaver_Pt,  #      5
         DeckThickness_Pt + BottomWellWidth_Pt,  #                       6 -
-        DeckThickness_Pt + BottomWellWidth_Pt + CornerSaver_Pt,  #         7
-        DeckThickness_Pt * 2 + BottomWellWidth_Pt - CornerSaver_Pt,  #     8
+        DeckThickness_Pt + BottomWellWidth_Pt + CornerSaver_Pt,  #      7
+        DeckThickness_Pt * 2 + BottomWellWidth_Pt - CornerSaver_Pt,  #  8
         DeckThickness_Pt * 2 + BottomWellWidth_Pt,  #                   9 -
     ]
 
     CardwellHorizontalRails = [
-        -(BottomWellHeight_Pt / 2 + DeckThickness_Pt),  #                0 -
+        -(BottomWellHeight_Pt / 2 + DeckThickness_Pt),  #                   0 -
         -(BottomWellHeight_Pt / 2 + DeckThickness_Pt - CornerSaver_Pt),  #  1
-        -(BottomWellHeight_Pt / 2 + CornerSaver_Pt),  #                  2
-        -(BottomWellHeight_Pt / 2),  #                                3 -
-        -(BottomWellHeight_Pt / 2 - CornerSaver_Pt),  #                  4
-        (BottomWellHeight_Pt / 2 - CornerSaver_Pt),  #                   5
-        (BottomWellHeight_Pt / 2),  #                                 6 -
-        (BottomWellHeight_Pt / 2 + CornerSaver_Pt),  #                   7
+        -(BottomWellHeight_Pt / 2 + CornerSaver_Pt),  #                     2
+        -(BottomWellHeight_Pt / 2),  #                                      3 -
+        -(BottomWellHeight_Pt / 2 - CornerSaver_Pt),  #                     4
+        (BottomWellHeight_Pt / 2 - CornerSaver_Pt),  #                      5
+        (BottomWellHeight_Pt / 2),  #                                       6 -
+        (BottomWellHeight_Pt / 2 + CornerSaver_Pt),  #                      7
         (BottomWellHeight_Pt / 2 + DeckThickness_Pt - CornerSaver_Pt),  #   8
-        (BottomWellHeight_Pt / 2 + DeckThickness_Pt),  #                 9 -
+        (BottomWellHeight_Pt / 2 + DeckThickness_Pt),  #                    9 -
     ]
 
     def DiagonalTopLeft():
@@ -374,7 +404,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     def DiagonalBottomRightNose():
         return (
             NoseTipEnd_Pt() + (NoseWidth_Pt / 2) * (sqrt2over2 - 1),
-            NoseWidth_Pt * sqrt(2) / 4,
+            NoseWidth_Pt * sqrt2over2 / 2,
         )
 
     def DiagonalBottomRightFace():
@@ -461,9 +491,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"( {OuterBoundsWidth/unit:{debug_precision}} {unit_name}, {OuterBoundsHeight/unit:{debug_precision}} {unit_name} ), {NoseTipEnd_Pt()/unit:{debug_precision}} {unit_name}, {RotatedSize()/unit:{debug_precision}} {unit_name}"
     )
 
+    Origin = [0, -(OuterBoundsHeight / 2)]
+
+    if args.back_support:
+        Origin[0] = -SupportThickness
+
     drawing = draw.Drawing(
         *("100%", "100%"),
-        viewBox=f"{0} {-(OuterBoundsHeight / 2)} {OuterBoundsWidth} {OuterBoundsHeight}",
+        viewBox=f"{Origin[0]} {Origin[1]} {OuterBoundsWidth} {OuterBoundsHeight}",
     )
 
     def rect(x1, y1, x2, y2, color):
@@ -557,6 +592,37 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 lhr = hr
             lvr = vr
 
+        if args.back_support:
+            drawing.append(
+                draw.Rectangle(
+                    -SupportThickness,
+                    -BottomWellHeight_Pt / 2,
+                    SupportThickness,
+                    BottomWellHeight_Pt,
+                    **randFillAttrs(),
+                )
+            )
+
+        if args.side_support:
+            drawing.append(
+                draw.Rectangle(
+                    CardwellVerticalRails[3],
+                    CardwellHorizontalRails[0] - SupportThickness,
+                    BottomWellWidth_Pt,
+                    SupportThickness,
+                    **randFillAttrs(),
+                )
+            )
+            drawing.append(
+                draw.Rectangle(
+                    CardwellVerticalRails[3],
+                    CardwellHorizontalRails[9],
+                    BottomWellWidth_Pt,
+                    SupportThickness,
+                    **randFillAttrs(),
+                )
+            )
+
         # # Head
         drawing.append(
             draw.Rectangle(
@@ -601,27 +667,29 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             )
         )
 
-        # # Nose Segment
-        drawing.append(
-            draw.Rectangle(
-                NoseStart_Pt(),
-                -NoseWidth_Pt / 2,
-                FlapThickness_Pt,
-                NoseWidth_Pt,
-                **randFillAttrs(),
-            )
-        )
+        if not args.no_nose:
 
-        # # Nose Tip
-        drawing.append(
-            draw.Rectangle(
-                NoseStart_Pt() + FlapThickness_Pt,
-                -NoseWidth_Pt / 2,
-                NoseWidth_Pt / 2,
-                NoseWidth_Pt,
-                **randFillAttrs(),
+            # # Nose Segment
+            drawing.append(
+                draw.Rectangle(
+                    NoseStart_Pt(),
+                    -NoseWidth_Pt / 2,
+                    FlapThickness_Pt,
+                    NoseWidth_Pt,
+                    **randFillAttrs(),
+                )
             )
-        )
+
+            # # Nose Tip
+            drawing.append(
+                draw.Rectangle(
+                    NoseStart_Pt() + FlapThickness_Pt,
+                    -NoseWidth_Pt / 2,
+                    NoseWidth_Pt / 2,
+                    NoseWidth_Pt,
+                    **randFillAttrs(),
+                )
+            )
 
     def cutOuterLine():
         cutPath = draw.Path(
@@ -631,91 +699,131 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
 
         # # Body
-        (
-            cutPath.M(CardwellVerticalRails[9], CardwellHorizontalRails[3])
-            .A(
-                *(DeckThickness_Pt, DeckThickness_Pt),
+        cutPath.M(CardwellVerticalRails[9], CardwellHorizontalRails[3]).A(
+            *(DeckThickness_Pt, DeckThickness_Pt),
+            *(0, 0, 0),
+            *(CardwellVerticalRails[6], CardwellHorizontalRails[0]),
+        )
+
+        if args.side_support:
+            cutPath.v(-SupportThickness / 2).a(
+                *(SupportThickness / 2, SupportThickness / 2),
                 *(0, 0, 0),
-                *(CardwellVerticalRails[6], CardwellHorizontalRails[0]),
-            )
-            .H(CardwellVerticalRails[3])
-            .A(
-                *(DeckThickness_Pt, DeckThickness_Pt),
+                *(-SupportThickness / 2, -SupportThickness / 2),
+            ).H(CardwellVerticalRails[3] + SupportThickness / 2).a(
+                *(SupportThickness / 2, SupportThickness / 2),
                 *(0, 0, 0),
-                *(CardwellVerticalRails[0], CardwellHorizontalRails[3]),
+                *(-SupportThickness / 2, SupportThickness / 2),
+            ).v(
+                SupportThickness / 2
             )
-            .L(CardwellVerticalRails[0], CardwellHorizontalRails[6])
-            .A(
-                *(DeckThickness_Pt, DeckThickness_Pt),
+        else:
+            cutPath.H(CardwellVerticalRails[3])
+
+        cutPath.A(
+            *(DeckThickness_Pt, DeckThickness_Pt),
+            *(0, 0, 0),
+            *(CardwellVerticalRails[0], CardwellHorizontalRails[3]),
+        )
+
+        if args.back_support:
+
+            cutPath.h(-SupportThickness / 2).a(
+                *(SupportThickness / 2, SupportThickness / 2),
                 *(0, 0, 0),
-                *(CardwellVerticalRails[3], CardwellHorizontalRails[9]),
-            )
-            .L(CardwellVerticalRails[6], CardwellHorizontalRails[9])
-            .A(
-                *(DeckThickness_Pt, DeckThickness_Pt),
+                *(-SupportThickness / 2, SupportThickness / 2),
+            ).V(CardwellHorizontalRails[6] - SupportThickness / 2).a(
+                *(SupportThickness / 2, SupportThickness / 2),
                 *(0, 0, 0),
-                *(CardwellVerticalRails[9], CardwellHorizontalRails[6]),
+                *(SupportThickness / 2, SupportThickness / 2),
+            ).h(
+                SupportThickness / 2
             )
+
+        else:
+            cutPath.V(CardwellHorizontalRails[6])
+
+        cutPath.A(
+            *(DeckThickness_Pt, DeckThickness_Pt),
+            *(0, 0, 0),
+            *(CardwellVerticalRails[3], CardwellHorizontalRails[9]),
+        )
+
+        if args.side_support:
+            cutPath.v(SupportThickness / 2).a(
+                *(SupportThickness / 2, SupportThickness / 2),
+                *(0, 0, 0),
+                *(SupportThickness / 2, SupportThickness / 2),
+            ).H(CardwellVerticalRails[6] - SupportThickness / 2).a(
+                *(SupportThickness / 2, SupportThickness / 2),
+                *(0, 0, 0),
+                *(SupportThickness / 2, -SupportThickness / 2),
+            ).v(
+                -SupportThickness / 2
+            )
+
+        else:
+            cutPath.H(CardwellVerticalRails[6])
+
+        cutPath.A(
+            *(DeckThickness_Pt, DeckThickness_Pt),
+            *(0, 0, 0),
+            *(CardwellVerticalRails[9], CardwellHorizontalRails[6]),
         )
 
         # head
-        (
-            cutPath.L(NeckBase_Pt(), HeadHeight_Pt() / 2)
-            ##
-            .L(
-                EarStart_Pt(),
-                HeadHeight_Pt() / 2,
-            )
-            .v(RearEarRadius_Pt())
-            .a(
-                *(RearEarRadius_Pt(), RearEarRadius_Pt()),
-                *(0, 0, 0),
-                *(RearEarRadius_Pt(), RearEarRadius_Pt()),
-            )
-            .h(EarWidth_Pt() - FlapThickness_Pt * 3 / 2)
-            .a(
-                *(FlapThickness_Pt, FlapThickness_Pt),
-                *(0, 0, 0),
-                *(FlapThickness_Pt, -FlapThickness_Pt),
-            )
-            .h(CardstockThickness_Pt)
-            .a(
-                *(FlapThickness_Pt, FlapThickness_Pt),
-                *(0, 0, 0),
-                *(FlapThickness_Pt, -FlapThickness_Pt),
-            )
-            .v(-NasalLabia_Pt())
-            .h(FlapThickness_Pt)
-            .a(
+
+        cutPath.L(NeckBase_Pt(), HeadHeight_Pt() / 2).L(
+            EarStart_Pt(),
+            HeadHeight_Pt() / 2,
+        ).v(RearEarRadius_Pt()).a(
+            *(RearEarRadius_Pt(), RearEarRadius_Pt()),
+            *(0, 0, 0),
+            *(RearEarRadius_Pt(), RearEarRadius_Pt()),
+        ).h(
+            EarWidth_Pt() - FlapThickness_Pt * 3 / 2
+        ).a(
+            *(FlapThickness_Pt, FlapThickness_Pt),
+            *(0, 0, 0),
+            *(FlapThickness_Pt, -FlapThickness_Pt),
+        ).h(
+            CardstockThickness_Pt
+        ).a(
+            *(FlapThickness_Pt, FlapThickness_Pt),
+            *(0, 0, 0),
+            *(FlapThickness_Pt, -FlapThickness_Pt),
+        ).v(
+            -NasalLabia_Pt()
+        )
+
+        if args.no_nose:
+            cutPath.v(-NoseWidth_Pt)
+        else:
+            cutPath.h(FlapThickness_Pt).a(
                 *(NoseWidth_Pt / 2, NoseWidth_Pt / 2),
                 *(0, 0, 0),
                 *(0, -NoseWidth_Pt),
-            )
-            .h(-FlapThickness_Pt)
-            .v(-NasalLabia_Pt())
-            .a(
-                *(FlapThickness_Pt, FlapThickness_Pt),
-                *(0, 0, 0),
-                *(-FlapThickness_Pt, -FlapThickness_Pt),
-            )
-            .h(-CardstockThickness_Pt)
-            .a(
-                *(FlapThickness_Pt, FlapThickness_Pt),
-                *(0, 0, 0),
-                *(-FlapThickness_Pt, -FlapThickness_Pt),
-            )
-            .h(-(EarWidth_Pt() - FlapThickness_Pt * 3 / 2))
-            .a(
-                *(RearEarRadius_Pt(), RearEarRadius_Pt()),
-                *(0, 0, 0),
-                *(-RearEarRadius_Pt(), RearEarRadius_Pt()),
-            )
-            .L(
-                EarStart_Pt(),
-                -HeadHeight_Pt() / 2,
-            )
-            ##
-            .L(NeckBase_Pt(), -HeadHeight_Pt() / 2)
+            ).h(-FlapThickness_Pt)
+
+        cutPath.v(-NasalLabia_Pt()).a(
+            *(FlapThickness_Pt, FlapThickness_Pt),
+            *(0, 0, 0),
+            *(-FlapThickness_Pt, -FlapThickness_Pt),
+        ).h(-CardstockThickness_Pt).a(
+            *(FlapThickness_Pt, FlapThickness_Pt),
+            *(0, 0, 0),
+            *(-FlapThickness_Pt, -FlapThickness_Pt),
+        ).h(
+            -(EarWidth_Pt() - FlapThickness_Pt * 3 / 2)
+        ).a(
+            *(RearEarRadius_Pt(), RearEarRadius_Pt()),
+            *(0, 0, 0),
+            *(-RearEarRadius_Pt(), RearEarRadius_Pt()),
+        ).L(
+            EarStart_Pt(),
+            -HeadHeight_Pt() / 2,
+        ).L(
+            NeckBase_Pt(), -HeadHeight_Pt() / 2
         )
 
         # close off
@@ -863,42 +971,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     HeadHeight_Pt() / 2,
                 ),
             ),
-            # nose
-            (
-                (
-                    NeckBase_Pt()
-                    + 2 * CardstockThickness_Pt
-                    + EarWidth_Pt()
-                    + FlapThickness_Pt,
-                    (NoseWidth_Pt / 2 - CornerSaver_Pt),
-                ),
-                (
-                    NeckBase_Pt()
-                    + 2 * CardstockThickness_Pt
-                    + EarWidth_Pt()
-                    + FlapThickness_Pt,
-                    -(NoseWidth_Pt / 2 - CornerSaver_Pt),
-                ),
-            ),
-            (
-                (
-                    NeckBase_Pt()
-                    + 2 * CardstockThickness_Pt
-                    + EarWidth_Pt()
-                    + 2 * FlapThickness_Pt,
-                    (NoseWidth_Pt / 2 - CornerSaver_Pt),
-                ),
-                (
-                    NeckBase_Pt()
-                    + 2 * CardstockThickness_Pt
-                    + EarWidth_Pt()
-                    + 2 * FlapThickness_Pt,
-                    -(NoseWidth_Pt / 2 - CornerSaver_Pt),
-                ),
-            ),
         ]
 
-        if 0 < HeadHeight_Pt() - NoseWidth_Pt - 2 * CornerSaver_Pt:
+        if args.no_nose:
             foldList.extend(
                 [
                     # Face flap
@@ -909,21 +984,75 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                         ),
                         (
                             NeckBase_Pt() + HeadWidth_Pt(),
-                            (NoseWidth_Pt / 2 + CornerSaver_Pt),
-                        ),
-                    ),
-                    (
-                        (
-                            NeckBase_Pt() + HeadWidth_Pt(),
-                            -(NoseWidth_Pt / 2 + CornerSaver_Pt),
-                        ),
-                        (
-                            NeckBase_Pt() + HeadWidth_Pt(),
                             -(HeadHeight_Pt() / 2 - CornerSaver_Pt),
                         ),
                     ),
                 ]
             )
+        else:
+            foldList.extend(
+                [  # nose
+                    (
+                        (
+                            NeckBase_Pt()
+                            + 2 * CardstockThickness_Pt
+                            + EarWidth_Pt()
+                            + FlapThickness_Pt,
+                            (NoseWidth_Pt / 2 - CornerSaver_Pt),
+                        ),
+                        (
+                            NeckBase_Pt()
+                            + 2 * CardstockThickness_Pt
+                            + EarWidth_Pt()
+                            + FlapThickness_Pt,
+                            -(NoseWidth_Pt / 2 - CornerSaver_Pt),
+                        ),
+                    ),
+                    (
+                        (
+                            NeckBase_Pt()
+                            + 2 * CardstockThickness_Pt
+                            + EarWidth_Pt()
+                            + 2 * FlapThickness_Pt,
+                            (NoseWidth_Pt / 2 - CornerSaver_Pt),
+                        ),
+                        (
+                            NeckBase_Pt()
+                            + 2 * CardstockThickness_Pt
+                            + EarWidth_Pt()
+                            + 2 * FlapThickness_Pt,
+                            -(NoseWidth_Pt / 2 - CornerSaver_Pt),
+                        ),
+                    ),
+                ]
+            )
+
+            if 0 < HeadHeight_Pt() - NoseWidth_Pt - 2 * CornerSaver_Pt:
+                foldList.extend(
+                    [
+                        # Face flap
+                        (
+                            (
+                                NeckBase_Pt() + HeadWidth_Pt(),
+                                (HeadHeight_Pt() / 2 - CornerSaver_Pt),
+                            ),
+                            (
+                                NeckBase_Pt() + HeadWidth_Pt(),
+                                (NoseWidth_Pt / 2 + CornerSaver_Pt),
+                            ),
+                        ),
+                        (
+                            (
+                                NeckBase_Pt() + HeadWidth_Pt(),
+                                -(NoseWidth_Pt / 2 + CornerSaver_Pt),
+                            ),
+                            (
+                                NeckBase_Pt() + HeadWidth_Pt(),
+                                -(HeadHeight_Pt() / 2 - CornerSaver_Pt),
+                            ),
+                        ),
+                    ]
+                )
 
         for fl in foldList:
             foldLine = draw.Path(
@@ -953,6 +1082,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 ),
             )
         ]
+        if args.no_nose:
+            cutList = []
 
         for cl in cutList:
             foldLine = draw.Path(
@@ -1050,15 +1181,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         orthoTheme = ("lime", "mediumseagreen", "forestgreen", "seagreen")
         nonePoint = (None, None)
 
-        for l in [
-            (0, 0, NoseTipEnd_Pt(), 0, *nonePoint, *orthoTheme),
-            (
-                dNose[0] - dNoseLength * sqrt2over2,
-                dNose[1] - dNoseLength * sqrt2over2,
-                *dNose,
-                *dTopLeft,
-                *angleTheme,
-            ),
+        debugPoints = [
+            (Origin[0], 0, NoseTipEnd_Pt(), 0, *nonePoint, *orthoTheme),
             (
                 dFace[0] - dFaceLength * sqrt2over2,
                 dFace[1] - dFaceLength * sqrt2over2,
@@ -1074,14 +1198,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 *angleTheme,
             ),
             (
-                DeckThickness_Pt + BottomWellWidth_Pt / 2,
-                CardwellHorizontalRails[0],
-                DeckThickness_Pt + BottomWellWidth_Pt / 2,
-                CardwellHorizontalRails[9],
-                *nonePoint,
-                *orthoTheme,
-            ),
-            (
                 NeckBase_Pt() + HeadWidth_Pt() / 2,
                 -(HeadHeight_Pt() / 2 + FlapThickness_Pt),
                 NeckBase_Pt() + HeadWidth_Pt() / 2,
@@ -1089,7 +1205,44 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 *nonePoint,
                 *orthoTheme,
             ),
-        ]:
+        ]
+
+        if args.side_support:
+            debugPoints.append(
+                (
+                    DeckThickness_Pt + BottomWellWidth_Pt / 2,
+                    CardwellHorizontalRails[0] - SupportThickness,
+                    DeckThickness_Pt + BottomWellWidth_Pt / 2,
+                    CardwellHorizontalRails[9] + SupportThickness,
+                    *nonePoint,
+                    *orthoTheme,
+                )
+            )
+
+        else:
+            debugPoints.append(
+                (
+                    DeckThickness_Pt + BottomWellWidth_Pt / 2,
+                    CardwellHorizontalRails[0],
+                    DeckThickness_Pt + BottomWellWidth_Pt / 2,
+                    CardwellHorizontalRails[9],
+                    *nonePoint,
+                    *orthoTheme,
+                )
+            )
+
+        if not args.no_nose:
+            debugPoints.append(
+                (
+                    dNose[0] - dNoseLength * sqrt2over2,
+                    dNose[1] - dNoseLength * sqrt2over2,
+                    *dNose,
+                    *dTopLeft,
+                    *angleTheme,
+                )
+            )
+
+        for l in debugPoints:
             distance_line(*l)
 
     if args.output_png:

@@ -100,6 +100,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "--no-nose",
         action="store_true",
     )
+    box_options.add_argument(
+        "--no-ears",
+        action="store_true",
+    )
 
     box_dimensions = parser.add_argument_group("Box Dimensions (user units)")
     box_dimensions_points = parser.add_argument_group("Box Dimensions (Points)")
@@ -536,19 +540,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         ap_y = actual_period * sin(direction)
 
         dashes = []
-        # print("+++++++")
+
         for n in range(period_count + 1):
             this_dash_start_x = start[0] + n * ap_x
             this_dash_start_y = start[1] + n * ap_y
             this_dash_end_x = this_dash_start_x + adl_x
             this_dash_end_y = this_dash_start_y + adl_y
-
-            # print(
-            #     this_dash_start_x,
-            #     this_dash_start_y,
-            #     this_dash_end_x,
-            #     this_dash_end_y,
-            # )
 
             dashes.append(
                 draw.Line(
@@ -634,27 +631,28 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             )
         )
 
-        # # Top Ear
-        drawing.append(
-            draw.Rectangle(
-                EarStart_Pt(),
-                -HeadHeight_Pt() / 2 - FlapThickness_Pt,
-                EarWidth_Pt(),
-                FlapThickness_Pt,
-                **randFillAttrs(),
+        if not args.no_ears:
+            # # Top Ear
+            drawing.append(
+                draw.Rectangle(
+                    EarStart_Pt(),
+                    -HeadHeight_Pt() / 2 - FlapThickness_Pt,
+                    EarWidth_Pt(),
+                    FlapThickness_Pt,
+                    **randFillAttrs(),
+                )
             )
-        )
 
-        # # Bottom Ear
-        drawing.append(
-            draw.Rectangle(
-                EarStart_Pt(),
-                HeadHeight_Pt() / 2,
-                EarWidth_Pt(),
-                FlapThickness_Pt,
-                **randFillAttrs(),
+            # # Bottom Ear
+            drawing.append(
+                draw.Rectangle(
+                    EarStart_Pt(),
+                    HeadHeight_Pt() / 2,
+                    EarWidth_Pt(),
+                    FlapThickness_Pt,
+                    **randFillAttrs(),
+                )
             )
-        )
 
         # # Face Flap
         drawing.append(
@@ -773,28 +771,33 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         # head
 
-        cutPath.L(NeckBase_Pt(), HeadHeight_Pt() / 2).L(
-            EarStart_Pt(),
-            HeadHeight_Pt() / 2,
-        ).v(RearEarRadius_Pt()).a(
-            *(RearEarRadius_Pt(), RearEarRadius_Pt()),
-            *(0, 0, 0),
-            *(RearEarRadius_Pt(), RearEarRadius_Pt()),
-        ).h(
-            EarWidth_Pt() - FlapThickness_Pt * 3 / 2
-        ).a(
+        cutPath.L(NeckBase_Pt(), HeadHeight_Pt() / 2)
+
+        if args.no_ears:
+            cutPath.h(HeadWidth_Pt())
+        else:
+            cutPath.L(
+                EarStart_Pt(),
+                HeadHeight_Pt() / 2,
+            ).v(RearEarRadius_Pt()).a(
+                *(RearEarRadius_Pt(), RearEarRadius_Pt()),
+                *(0, 0, 0),
+                *(RearEarRadius_Pt(), RearEarRadius_Pt()),
+            ).h(
+                EarWidth_Pt() - FlapThickness_Pt * 3 / 2
+            ).a(
+                *(FlapThickness_Pt, FlapThickness_Pt),
+                *(0, 0, 0),
+                *(FlapThickness_Pt, -FlapThickness_Pt),
+            ).h(
+                CardstockThickness_Pt
+            )
+
+        cutPath.a(
             *(FlapThickness_Pt, FlapThickness_Pt),
             *(0, 0, 0),
             *(FlapThickness_Pt, -FlapThickness_Pt),
-        ).h(
-            CardstockThickness_Pt
-        ).a(
-            *(FlapThickness_Pt, FlapThickness_Pt),
-            *(0, 0, 0),
-            *(FlapThickness_Pt, -FlapThickness_Pt),
-        ).v(
-            -NasalLabia_Pt()
-        )
+        ).v(-NasalLabia_Pt())
 
         if args.no_nose:
             cutPath.v(-NoseWidth_Pt)
@@ -809,22 +812,25 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             *(FlapThickness_Pt, FlapThickness_Pt),
             *(0, 0, 0),
             *(-FlapThickness_Pt, -FlapThickness_Pt),
-        ).h(-CardstockThickness_Pt).a(
-            *(FlapThickness_Pt, FlapThickness_Pt),
-            *(0, 0, 0),
-            *(-FlapThickness_Pt, -FlapThickness_Pt),
-        ).h(
-            -(EarWidth_Pt() - FlapThickness_Pt * 3 / 2)
-        ).a(
-            *(RearEarRadius_Pt(), RearEarRadius_Pt()),
-            *(0, 0, 0),
-            *(-RearEarRadius_Pt(), RearEarRadius_Pt()),
-        ).L(
-            EarStart_Pt(),
-            -HeadHeight_Pt() / 2,
-        ).L(
-            NeckBase_Pt(), -HeadHeight_Pt() / 2
         )
+
+        if args.no_ears:
+            cutPath.h(-HeadWidth_Pt())
+        else:
+            cutPath.h(-CardstockThickness_Pt).a(
+                *(FlapThickness_Pt, FlapThickness_Pt),
+                *(0, 0, 0),
+                *(-FlapThickness_Pt, -FlapThickness_Pt),
+            ).h(-(EarWidth_Pt() - FlapThickness_Pt * 3 / 2)).a(
+                *(RearEarRadius_Pt(), RearEarRadius_Pt()),
+                *(0, 0, 0),
+                *(-RearEarRadius_Pt(), RearEarRadius_Pt()),
+            ).L(
+                EarStart_Pt(),
+                -HeadHeight_Pt() / 2,
+            )
+
+        cutPath.L(NeckBase_Pt(), -HeadHeight_Pt() / 2)
 
         # close off
         cutPath.Z()
@@ -944,34 +950,68 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 (NeckBase_Pt(), CardwellHorizontalRails[4]),
                 (NeckBase_Pt(), CardwellHorizontalRails[5]),
             ),
-            # # Ear flaps
-            (
-                (
-                    NeckBase_Pt() + CardstockThickness_Pt + CornerSaver_Pt,
-                    -HeadHeight_Pt() / 2,
-                ),
-                (
-                    NeckBase_Pt()
-                    + CardstockThickness_Pt
-                    - CornerSaver_Pt
-                    + EarWidth_Pt(),
-                    -HeadHeight_Pt() / 2,
-                ),
-            ),
-            (
-                (
-                    NeckBase_Pt() + CardstockThickness_Pt + CornerSaver_Pt,
-                    HeadHeight_Pt() / 2,
-                ),
-                (
-                    NeckBase_Pt()
-                    + CardstockThickness_Pt
-                    - CornerSaver_Pt
-                    + EarWidth_Pt(),
-                    HeadHeight_Pt() / 2,
-                ),
-            ),
         ]
+
+        if args.back_support:
+            foldList.extend(
+                [
+                    (
+                        (CardwellVerticalRails[0], CardwellHorizontalRails[4]),
+                        (CardwellVerticalRails[0], CardwellHorizontalRails[5]),
+                    ),
+                ]
+            )
+
+        if args.side_support:
+            foldList.extend(
+                [
+                    (
+                        (CardwellVerticalRails[4], CardwellHorizontalRails[0]),
+                        (CardwellVerticalRails[5], CardwellHorizontalRails[0]),
+                    ),
+                    (
+                        (CardwellVerticalRails[4], CardwellHorizontalRails[9]),
+                        (CardwellVerticalRails[5], CardwellHorizontalRails[9]),
+                    ),
+                ]
+            )
+
+        if not args.no_ears:
+            # # Ear flaps
+            foldList.extend(
+                [
+                    (
+                        (
+                            NeckBase_Pt()
+                            + CardstockThickness_Pt
+                            + CornerSaver_Pt,
+                            -HeadHeight_Pt() / 2,
+                        ),
+                        (
+                            NeckBase_Pt()
+                            + CardstockThickness_Pt
+                            - CornerSaver_Pt
+                            + EarWidth_Pt(),
+                            -HeadHeight_Pt() / 2,
+                        ),
+                    ),
+                    (
+                        (
+                            NeckBase_Pt()
+                            + CardstockThickness_Pt
+                            + CornerSaver_Pt,
+                            HeadHeight_Pt() / 2,
+                        ),
+                        (
+                            NeckBase_Pt()
+                            + CardstockThickness_Pt
+                            - CornerSaver_Pt
+                            + EarWidth_Pt(),
+                            HeadHeight_Pt() / 2,
+                        ),
+                    ),
+                ]
+            )
 
         if args.no_nose:
             foldList.extend(
@@ -1190,45 +1230,59 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 *dTopLeft,
                 *angleTheme,
             ),
-            (
-                dEar[0] - dEarLength * sqrt2over2,
-                dEar[1] - dEarLength * sqrt2over2,
-                *dEar,
-                *dTopLeft,
-                *angleTheme,
-            ),
-            (
+        ]
+
+        bodyOrthoPoints = None
+        headOrthoPoints = None
+
+        if args.no_ears:
+            headOrthoPoints = (
+                (
+                    NeckBase_Pt() + HeadWidth_Pt() * 2 / 3,
+                    -(HeadHeight_Pt() / 2),
+                    NeckBase_Pt() + HeadWidth_Pt() * 2 / 3,
+                    (HeadHeight_Pt() / 2),
+                    *nonePoint,
+                    *orthoTheme,
+                ),
+            )
+
+        else:
+            debugPoints.append(
+                (
+                    dEar[0] - dEarLength * sqrt2over2,
+                    dEar[1] - dEarLength * sqrt2over2,
+                    *dEar,
+                    *dTopLeft,
+                    *angleTheme,
+                ),
+            )
+            headOrthoPoints = (
                 NeckBase_Pt() + HeadWidth_Pt() / 2,
                 -(HeadHeight_Pt() / 2 + FlapThickness_Pt),
                 NeckBase_Pt() + HeadWidth_Pt() / 2,
                 (HeadHeight_Pt() / 2 + FlapThickness_Pt),
                 *nonePoint,
                 *orthoTheme,
-            ),
-        ]
-
-        if args.side_support:
-            debugPoints.append(
-                (
-                    DeckThickness_Pt + BottomWellWidth_Pt / 2,
-                    CardwellHorizontalRails[0] - SupportThickness,
-                    DeckThickness_Pt + BottomWellWidth_Pt / 2,
-                    CardwellHorizontalRails[9] + SupportThickness,
-                    *nonePoint,
-                    *orthoTheme,
-                )
             )
 
+        if args.side_support:
+            bodyOrthoPoints = (
+                DeckThickness_Pt + BottomWellWidth_Pt / 2,
+                CardwellHorizontalRails[0] - SupportThickness,
+                DeckThickness_Pt + BottomWellWidth_Pt / 2,
+                CardwellHorizontalRails[9] + SupportThickness,
+                *nonePoint,
+                *orthoTheme,
+            )
         else:
-            debugPoints.append(
-                (
-                    DeckThickness_Pt + BottomWellWidth_Pt / 2,
-                    CardwellHorizontalRails[0],
-                    DeckThickness_Pt + BottomWellWidth_Pt / 2,
-                    CardwellHorizontalRails[9],
-                    *nonePoint,
-                    *orthoTheme,
-                )
+            bodyOrthoPoints = (
+                DeckThickness_Pt + BottomWellWidth_Pt / 2,
+                CardwellHorizontalRails[0],
+                DeckThickness_Pt + BottomWellWidth_Pt / 2,
+                CardwellHorizontalRails[9],
+                *nonePoint,
+                *orthoTheme,
             )
 
         if not args.no_nose:
@@ -1241,6 +1295,22 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     *angleTheme,
                 )
             )
+
+        if bodyOrthoPoints is not None:
+            debugPoints.append(bodyOrthoPoints)
+        if headOrthoPoints is not None:
+            debugPoints.append(headOrthoPoints)
+
+        if bodyOrthoPoints is not None and headOrthoPoints is not None:
+            medianPoints = list(headOrthoPoints)
+
+            medianPoints[1] = medianPoints[3]
+            medianPoints[3] = bodyOrthoPoints[1]
+
+            medianPoints[0] = NeckBase_Pt() + HeadWidth_Pt() / 4
+            medianPoints[2] = NeckBase_Pt() + HeadWidth_Pt() / 4
+
+            debugPoints.append(tuple(medianPoints))
 
         for l in debugPoints:
             distance_line(*l)

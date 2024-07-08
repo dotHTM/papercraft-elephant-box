@@ -1,2 +1,2 @@
 [console_scripts]
-elephantbox = elephantbox.cli:main
+elephantbox = elephantbox.cli:ElephantBoxMain

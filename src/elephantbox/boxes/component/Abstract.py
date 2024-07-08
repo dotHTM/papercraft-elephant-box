@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from elephantbox.boxes.Dash import Dasher
+from elephantbox.boxes.component.Dash import Dasher
 from elephantbox.math.Geometry import Point
 from elephantbox.support.Argumentable import AKW_TYPE
 from elephantbox.support.Argumentable import Argumentable

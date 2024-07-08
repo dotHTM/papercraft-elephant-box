@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from drawsvg import Group
 from drawsvg import Path
 
-from elephantbox.boxes.Abstract import RectangularBox
+from elephantbox.boxes.component.Abstract import RectangularBox
 from elephantbox.cli import main_maker
 from elephantbox.math.Geometry import Point
 from elephantbox.math.Geometry import rotated_size

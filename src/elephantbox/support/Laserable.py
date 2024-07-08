@@ -3,7 +3,7 @@ from __future__ import annotations
 from drawsvg import Group
 from drawsvg import Line
 
-from elephantbox.boxes.Dash import Dasher
+from elephantbox.boxes.component.Dash import Dasher
 from elephantbox.math.Geometry import Point
 
 

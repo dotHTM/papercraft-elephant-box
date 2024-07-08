@@ -6,7 +6,7 @@ from collections.abc import Sequence
 
 import drawsvg
 
-from elephantbox.boxes.Dash import Dasher
+from elephantbox.boxes.component.Dash import Dasher
 from elephantbox.math.Geometry import Point
 
 

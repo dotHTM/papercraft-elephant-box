@@ -1,4 +1,0 @@
-drawsvg[all]~=2.0
-
-[dev]
-pre-commit

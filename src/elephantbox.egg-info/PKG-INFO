@@ -1,6 +1,0 @@
-Metadata-Version: 2.1
-Name: elephantbox
-Version: 0.0.1
-Requires-Dist: drawsvg[all]~=2.0
-Provides-Extra: dev
-Requires-Dist: pre-commit; extra == "dev"

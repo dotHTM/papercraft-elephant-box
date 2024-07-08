@@ -7,7 +7,6 @@ from collections.abc import Sequence
 import drawsvg
 
 from elephantbox.boxes.Dash import Dasher
-from elephantbox.boxes.Elephant import ElephantBox
 from elephantbox.math.Geometry import Point
 
 
@@ -79,6 +78,3 @@ def main_maker(boxType) -> Callable:
         return 0
 
     return main
-
-
-ElephantBoxMain = main_maker(ElephantBox)

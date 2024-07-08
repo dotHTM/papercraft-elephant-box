@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 DPI = 300
 
 INCH = DPI

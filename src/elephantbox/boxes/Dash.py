@@ -1,10 +1,19 @@
-from dataclasses import dataclass
-from math import atan, ceil, cos, sin, sqrt
+from __future__ import annotations
 
-from drawsvg import Group, Line
+from dataclasses import dataclass
+from math import atan
+from math import ceil
+from math import cos
+from math import sin
+from math import sqrt
+
+from drawsvg import Group
+from drawsvg import Line
 
 from elephantbox.math.Geometry import Point
-from elephantbox.support.Argumentable import AKW_TYPE, Argumentable, fl_akw
+from elephantbox.support.Argumentable import AKW_TYPE
+from elephantbox.support.Argumentable import Argumentable
+from elephantbox.support.Argumentable import fl_akw
 from elephantbox.support.Validatable import Validatable
 
 

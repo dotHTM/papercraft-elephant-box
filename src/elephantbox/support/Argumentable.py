@@ -1,7 +1,9 @@
-from argparse import ArgumentParser, Namespace
-from dataclasses import dataclass
+from __future__ import annotations
+
 import re
-from typing import Optional
+from argparse import ArgumentParser
+from argparse import Namespace
+from dataclasses import dataclass
 
 
 AKW_TYPE = tuple[list[str], dict]
@@ -27,7 +29,7 @@ def akw_to_attr(akw: AKW_TYPE) -> str:
 
 @dataclass(frozen=True)
 class Argumentable:
-    parsed_arguments: Optional[Namespace]
+    parsed_arguments: Namespace | None
 
     @classmethod
     def dimension_arguments(cls) -> list[AKW_TYPE]:
@@ -67,7 +69,7 @@ class Argumentable:
         cls,
         *,
         dimension_scale: float,
-        parsed_arguments: Optional[Namespace] = None,
+        parsed_arguments: Namespace | None = None,
         **default_kwargs,
     ):
         kwargs = default_kwargs

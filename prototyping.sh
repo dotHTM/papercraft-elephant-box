@@ -26,4 +26,3 @@ osascript -e 'tell application "Safari"
         end if
     end
 end tell'
-

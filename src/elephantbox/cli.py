@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from argparse import ArgumentParser
-from typing import Callable, Optional, Sequence
+from collections.abc import Callable
+from collections.abc import Sequence
 
 import drawsvg
-
 
 from elephantbox.boxes.Dash import Dasher
 from elephantbox.boxes.Elephant import ElephantBox
@@ -39,7 +41,7 @@ def output_args(parser: ArgumentParser):
 
 
 def main_maker(boxType) -> Callable:
-    def main(argv: Optional[Sequence[str]] = None) -> int:
+    def main(argv: Sequence[str] | None = None) -> int:
         import argparse
 
         parser = argparse.ArgumentParser()

@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-from typing import Callable
-
-
-from elephantbox.math.Geometry import Point
-
 from dataclasses import dataclass
 
-from drawsvg import Group, Path
+from drawsvg import Group
+from drawsvg import Path
 
 from elephantbox.boxes.Abstract import RectangularBox
-from elephantbox.math.Geometry import Point, rotated_size, sqrt2over2
-from elephantbox.support.Argumentable import AKW_TYPE, Argumentable, fl_akw
-from elephantbox.support.Laserable import Laserable, SpanableList
+from elephantbox.math.Geometry import Point
+from elephantbox.math.Geometry import rotated_size
+from elephantbox.math.Geometry import sqrt2over2
+from elephantbox.support.Argumentable import AKW_TYPE
+from elephantbox.support.Argumentable import Argumentable
+from elephantbox.support.Argumentable import fl_akw
+from elephantbox.support.Laserable import Laserable
+from elephantbox.support.Laserable import SpanableList
 
 
 @dataclass(frozen=True)

@@ -64,31 +64,31 @@ class ElephantBox(
     @property
     def body_vertical_rails(self) -> list[float]:
         return [
-            0,  #                                               0 -
-            self.corner_saver,  #                               1
-            self.depth - self.corner_saver,  #                  2
-            self.depth,  #                                      3 -
-            self.depth + self.corner_saver,  #                  4
-            self.depth + self.width - self.corner_saver,  #     5
-            self.depth + self.width,  #                         6 -
-            self.depth + self.width + self.corner_saver,  #     7
-            self.depth * 2 + self.width - self.corner_saver,  # 8
-            self.depth * 2 + self.width,  #                     9 -
+            self.back_support + 0,
+            self.back_support + self.corner_saver,
+            self.back_support + self.depth - self.corner_saver,
+            self.back_support + self.depth,
+            self.back_support + self.depth + self.corner_saver,
+            self.back_support + self.depth + self.width - self.corner_saver,
+            self.back_support + self.depth + self.width,
+            self.back_support + self.depth + self.width + self.corner_saver,
+            self.back_support + self.depth * 2 + self.width - self.corner_saver,
+            self.back_support + self.depth * 2 + self.width,
         ]
 
     @property
     def body_horizontal_rails(self) -> list[float]:
         return [
-            -(self.height / 2 + self.depth),  #                     0 -
-            -(self.height / 2 + self.depth - self.corner_saver),  # 1
-            -(self.height / 2 + self.corner_saver),  #              2
-            -(self.height / 2),  #                                  3 -
-            -(self.height / 2 - self.corner_saver),  #              4
-            (self.height / 2 - self.corner_saver),  #               5
-            (self.height / 2),  #                                   6 -
-            (self.height / 2 + self.corner_saver),  #               7
-            (self.height / 2 + self.depth - self.corner_saver),  #  8
-            (self.height / 2 + self.depth),  #                      9 -
+            -(self.height / 2 + self.depth),
+            -(self.height / 2 + self.depth - self.corner_saver),
+            -(self.height / 2 + self.corner_saver),
+            -(self.height / 2),
+            -(self.height / 2 - self.corner_saver),
+            (self.height / 2 - self.corner_saver),
+            (self.height / 2),
+            (self.height / 2 + self.corner_saver),
+            (self.height / 2 + self.depth - self.corner_saver),
+            (self.height / 2 + self.depth),
         ]
 
     @property
@@ -673,4 +673,4 @@ class ElephantBox(
         return cutList
 
 
-main = main_maker(ElephantBox)
+main = main_maker(ElephantBox, origin=Point(0, -1800))

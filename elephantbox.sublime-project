@@ -9,7 +9,7 @@
     "build_systems":[
         {
             "name": "Project Build",
-            "cmd": ["$project_path/prototyping.sh"],
+            "cmd": ["make", "prototype"],
             "working_dir":"$project_path",
             // "shell_cmd": "env",
         }

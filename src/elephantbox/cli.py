@@ -39,7 +39,9 @@ def output_args(parser: ArgumentParser):
     )
 
 
-def main_maker(boxType) -> Callable:
+def main_maker(
+    boxType, origin: Point = Point(0, 0), laser_bed: Point = Point(3600, 3600)
+) -> Callable:
     def main(argv: Sequence[str] | None = None) -> int:
         import argparse
 
@@ -69,9 +71,20 @@ def main_maker(boxType) -> Callable:
         drawing = drawsvg.Drawing(
             width="100%",
             height="100%",
-            viewBox="0 -1800 3600 3600",
+            viewBox=f"{origin.x} {origin.y} {laser_bed.x} {laser_bed.y}",
             transform="scale(300)",
         )
+
+        # drawing.append(
+        #     drawsvg.Rectangle(
+        #         *origin.tuple,
+        #         *laser_bed.tuple,
+        #         stroke="orange",
+        #         stroke_width=3,
+        #         fill="orange",
+        #         opacity="25%",
+        #     )
+        # )
 
         drawing.append(the_box.draw())
         drawing.save_svg(f"{args.output}.svg")

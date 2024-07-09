@@ -47,6 +47,8 @@ class InnerCutListable:
 
 
 class Laserable(FoldListable, InnerCutListable):
+    laser_bed_origin = Point(0, 0)
+
     def guides(self) -> Group:
         return Group()
 
@@ -54,7 +56,9 @@ class Laserable(FoldListable, InnerCutListable):
         return Group()
 
     def draw(self, guides: bool = False) -> Group:
-        grp = Group()
+        grp = Group(
+            transform=f"translate({self.laser_bed_origin.x} {self.laser_bed_origin.y})"
+        )
         if guides:
             grp.append(self.guides())
         grp.append(self.cut_outline())

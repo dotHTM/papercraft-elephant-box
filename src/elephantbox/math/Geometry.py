@@ -2,11 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from math import pi
 from math import sqrt
 from typing import Self
 
 
 sqrt2over2 = sqrt(2) * 0.5
+
+
+def deg2rad(degrees: float) -> float:
+    return (degrees % 360) * pi / 180
 
 
 @dataclass(frozen=True)

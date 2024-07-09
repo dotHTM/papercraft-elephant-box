@@ -48,6 +48,8 @@ def main_maker(
         parser = argparse.ArgumentParser()
 
         debug_args(parser)
+        parser.add_argument("--whole-rotate", type=float, default=0)
+        parser.add_argument("--draw-laser-bed", action="store_true")
         boxType.add_arguments(parser)
         Dasher.add_arguments(parser)
         output_args(parser)
@@ -75,18 +77,22 @@ def main_maker(
             transform="scale(300)",
         )
 
-        # drawing.append(
-        #     drawsvg.Rectangle(
-        #         *origin.tuple,
-        #         *laser_bed.tuple,
-        #         stroke="orange",
-        #         stroke_width=3,
-        #         fill="orange",
-        #         opacity="25%",
-        #     )
-        # )
+        if args.draw_laser_bed:
+            drawing.append(
+                drawsvg.Rectangle(
+                    *origin.tuple,
+                    *laser_bed.tuple,
+                    stroke="orange",
+                    stroke_width=3,
+                    fill="orange",
+                    opacity="25%",
+                )
+            )
 
-        drawing.append(the_box.draw())
+        grp = drawsvg.Group(transform=f"rotate({args.whole_rotate})")
+
+        grp.append(the_box.draw())
+        drawing.append(grp)
         drawing.save_svg(f"{args.output}.svg")
         return 0
 

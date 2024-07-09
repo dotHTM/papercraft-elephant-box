@@ -9,12 +9,14 @@ watchbox \
     -z 2.5 \
     -s 0.25 \
     -c 0.3 \
-    --lock-radius      4 \
-    --lock-tab-angle   0.7 \
-    --lock-gap-cut     0.5 \
-    --lock-fold-height -0.5 \
-    --max-dash-length .06125 \
-    --dash-period .25 \
+    --lock-radius      0.5 \
+    --lock-tab-angle   20 \
+    --lock-gap-cut     0.025 \
+    --lock-fold-height 0.03 \
+    --max-dash-length  0.06 \
+    --dash-period .125 \
+    --whole-rotate 45 \
+    --draw-laser-bed \
     -o proto/watchbox
 
 
@@ -30,6 +32,7 @@ elephantbox \
     --side-support 0.5 \
     --max-dash-length .06125 \
     --dash-period .25 \
+    --draw-laser-bed \
     -o proto/elephantbox
 
 osascript -e 'tell application "Safari"

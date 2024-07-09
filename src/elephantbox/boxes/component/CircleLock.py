@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import cos
-from math import pi
 from math import sin
 from math import sqrt
 
@@ -11,6 +10,7 @@ from drawsvg import Group
 from drawsvg import Path
 
 from elephantbox.boxes.component.Dash import Dasher
+from elephantbox.math.Geometry import deg2rad
 from elephantbox.math.Geometry import Point
 from elephantbox.support.Validatable import Validatable
 
@@ -18,13 +18,14 @@ from elephantbox.support.Validatable import Validatable
 @dataclass(frozen=True)
 class CicleLock(Validatable):
     radius: float
-    tab_angle: float
+    tab_angle_deg: float
     gap_cut: float
     fold_height: float | None
 
     dasher: Dasher
 
     corner_saver: float = 0
+    guides: bool = False
 
     def assertions(self) -> list[tuple[bool, str]]:
         return super().assertions() + [
@@ -38,8 +39,8 @@ class CicleLock(Validatable):
         ]
 
     @property
-    def degreeAngle(self):
-        return self.tab_angle * 180 / pi
+    def tab_angle(self):
+        return deg2rad(self.tab_angle_deg)
 
     @property
     def unit_corner_point(self) -> Point:
@@ -77,17 +78,23 @@ class CicleLock(Validatable):
             return None
 
         position_y = self.left_slot_corner_point.y - self.fold_height
+        position_x = 0
 
-        position_x = sqrt(pow(self.inner_fold_radius, 2) - pow(position_y, 2))
         if position_y > self.divider.y:
             position_x = self.left_slot_corner_point.x - sqrt(
                 pow(self.gap_cut + self.corner_saver, 2)
                 - pow(self.fold_height, 2)
             )
+        else:
+            position_x = sqrt(
+                pow(self.inner_fold_radius, 2) - pow(position_y, 2)
+            )
 
         return Point(position_x, position_y)
 
-    def draw_tab(self, origin: Point, angle: float) -> Group:
+    def draw_tab(
+        self, origin: Point, angle: float, cut_obj_kwargs: dict = {}
+    ) -> Group:
         grp = Group(
             transform=f"translate( {origin.x} {origin.y}) rotate( {angle})",
         )
@@ -97,12 +104,7 @@ class CicleLock(Validatable):
         C = self.outer_gap_corner_point.mirror_x
         D = self.outer_gap_corner_point
 
-        cut_path = Path(
-            fill="yellow",
-            stroke="blue",
-            stroke_width=2,
-            opacity="25%",
-        )
+        cut_path = Path(**cut_obj_kwargs)
         cut_path.M(A.x, A.y).A(
             *(self.radius - self.gap_cut, self.radius - self.gap_cut),
             *(0, 0 < self.tab_angle, 0),
@@ -129,61 +131,59 @@ class CicleLock(Validatable):
                 self.dasher.span(self.fold_left.mirror_x, self.fold_left)
             )
 
-            grp.append(
-                Circle(
-                    *self.divider.tuple,
-                    10,
+            if self.guides:
+                grp.append(
+                    Circle(
+                        *self.divider.tuple,
+                        10,
+                    )
                 )
-            )
-            grp.append(
-                Circle(
-                    *self.fold_left.tuple,
-                    10,
+                grp.append(
+                    Circle(
+                        *self.fold_left.tuple,
+                        10,
+                    )
                 )
-            )
-            grp.append(
-                Circle(
-                    *self.fold_left.mirror_x.tuple,
-                    10,
+                grp.append(
+                    Circle(
+                        *self.fold_left.mirror_x.tuple,
+                        10,
+                    )
                 )
-            )
-            grp.append(
-                Circle(
-                    *self.left_slot_corner_point.tuple,
-                    self.gap_cut + self.corner_saver,
-                    stroke="black",
-                    stroke_width=1,
-                    opacity="5%",
+                grp.append(
+                    Circle(
+                        *self.left_slot_corner_point.tuple,
+                        self.gap_cut + self.corner_saver,
+                        stroke="black",
+                        stroke_width=1,
+                        opacity="5%",
+                    )
                 )
-            )
-            grp.append(
-                Circle(
-                    *(0, 0),
-                    self.radius - self.gap_cut - self.corner_saver,
-                    stroke="black",
-                    stroke_width=1,
-                    opacity="5%",
+                grp.append(
+                    Circle(
+                        *(0, 0),
+                        self.radius - self.gap_cut - self.corner_saver,
+                        stroke="black",
+                        stroke_width=1,
+                        opacity="5%",
+                    )
                 )
-            )
 
             grp.append(fold_line)
-
-        for p in A, B, C, D:
-            c = Circle(*p.tuple, 10)
-            grp.append(c)
+        if self.guides:
+            for p in A, B, C, D:
+                c = Circle(*p.tuple, 10)
+                grp.append(c)
 
         return grp
 
-    def draw_slot(self, origin: Point, angle: float) -> Group:
+    def draw_slot(
+        self, origin: Point, angle: float, cut_obj_kwargs: dict = {}
+    ) -> Group:
         grp = Group(
             transform=f"translate( {origin.x} {origin.y}) rotate( {angle})",
         )
-        cut_path = Path(
-            fill="lime",
-            stroke="blue",
-            stroke_width=2,
-            opacity="25%",
-        )
+        cut_path = Path(**cut_obj_kwargs)
 
         left = self.left_slot_corner_point
         right = self.left_slot_corner_point.mirror_x
@@ -195,9 +195,9 @@ class CicleLock(Validatable):
         ).L(left.x, left.y).Z()
 
         grp.append(cut_path)
-
-        grp.append(Circle(0, 0, 10))
-        grp.append(Circle(left.x, left.y, 10))
-        grp.append(Circle(right.x, right.y, 10))
+        if self.guides:
+            grp.append(Circle(0, 0, 10))
+            grp.append(Circle(left.x, left.y, 10))
+            grp.append(Circle(right.x, right.y, 10))
 
         return grp

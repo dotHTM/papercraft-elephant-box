@@ -9,10 +9,10 @@ from drawsvg import Rectangle
 
 from elephantbox.boxes.component.Abstract import RectangularBox
 from elephantbox.boxes.component.CircleLock import CicleLock
-from elephantbox.cli import main_maker
 from elephantbox.math.Geometry import Point
 from elephantbox.math.Geometry import sqrt2over2
 from elephantbox.math.Geometry import symetric_mirrored_summation_sequence
+from elephantbox.support.Argumentable import akw
 from elephantbox.support.Argumentable import AKW_TYPE
 from elephantbox.support.Argumentable import Argumentable
 from elephantbox.support.Argumentable import fl_akw
@@ -51,21 +51,28 @@ class WatchBox(
     lock_gap_cut: float
     lock_fold_height: float | None
 
-    # lock_offset_x: float
-    # lock_offset_y: float
+    lock_offset_x: float
+    lock_offset_y: float
+    lock_opposite: bool
+
+    show_guides: bool = False
 
     @classmethod
     def dimension_arguments(cls) -> list[AKW_TYPE]:
         return super().dimension_arguments() + [
             fl_akw("--lock-radius"),
             fl_akw("--lock-gap-cut"),
-            fl_akw("--lock-fold-height"),
+            fl_akw("--lock-fold-height", default=0),
+            fl_akw("--lock-offset-x", default=0),
+            fl_akw("--lock-offset-y", default=0),
         ]
 
     @classmethod
     def feature_arguments(cls) -> list[AKW_TYPE]:
         return super().feature_arguments() + [
-            fl_akw("--lock-tab-angle"),
+            fl_akw("--lock-tab-angle", default=0),
+            akw("--lock-opposite", action="store_true"),
+            akw("--show-guides", action="store_true"),
         ]
 
     @property
@@ -77,6 +84,7 @@ class WatchBox(
             fold_height=self.lock_fold_height,
             corner_saver=self.corner_saver,
             dasher=self.dasher,
+            show_guides=self.show_guides,
         )
 
     @property
@@ -194,7 +202,7 @@ class WatchBox(
 
         return ret
 
-    def guide(self) -> Group:
+    def guides(self) -> Group:
         grp = Group()
 
         lhh = None
@@ -259,74 +267,78 @@ class WatchBox(
 
         flap_thick = self.flap_thick
 
+        flap_half = flap_thick / 2
+
         cut_path = Path(
             fill="#aaaaff",
             stroke="black",
             stroke_width=5,
         )
-        cut_path.M(self.vertical_rails[0], self.horizontal_rails[1]).a(
+        cut_path.M(
+            self.vertical_rails[0],
+            self.horizontal_rails[1],
+        ).a(
             *(self.depth, self.depth),
             *(0, 0, 1),
             *(self.depth, -self.depth),
-        ).v(-flap_thick / 2).a(
-            *(flap_thick / 2, flap_thick / 2),
+        ).v(-flap_half).a(
+            *(flap_half, flap_half),
             *(0, 0, 1),
             *(flap_thick, 0),
         ).v(
-            flap_thick / 2
+            flap_half
         ).a(
             *(self.depth, self.depth),
             *(0, 0, 1),
             *(self.depth, self.depth),
         ).h(
-            flap_thick / 2
+            flap_half
         ).a(
-            *(flap_thick / 2, flap_thick / 2),
+            *(flap_half, flap_half),
             *(0, 0, 1),
-            *(flap_thick / 2, flap_thick / 2),
+            *(flap_half, flap_half),
         ).v(
             self.height - flap_thick
         ).a(
-            *(flap_thick / 2, flap_thick / 2),
+            *(flap_half, flap_half),
             *(0, 0, 1),
-            *(-flap_thick / 2, flap_thick / 2),
+            *(-flap_half, flap_half),
         ).h(
-            -flap_thick / 2
+            -flap_half
         ).a(
             *(self.depth, self.depth),
             *(0, 0, 1),
             *(-self.depth, self.depth),
         ).v(
-            flap_thick / 2
+            flap_half
         ).a(
-            *(flap_thick / 2, flap_thick / 2),
+            *(flap_half, flap_half),
             *(0, 0, 1),
             *(-flap_thick, 0),
         ).v(
-            -flap_thick / 2
+            -flap_half
         ).a(
             *(self.depth, self.depth),
             *(0, 0, 1),
             *(-self.depth, -self.depth),
         ).h(
-            -flap_thick / 2
+            -flap_half
         ).a(
-            *(flap_thick / 2, flap_thick / 2),
+            *(flap_half, flap_half),
             *(0, 0, 1),
-            *(-flap_thick / 2, -flap_thick / 2),
+            *(-flap_half, -flap_half),
         ).v(
             -self.height + flap_thick
         ).a(
-            *(flap_thick / 2, flap_thick / 2),
+            *(flap_half, flap_half),
             *(0, 0, 1),
-            *(flap_thick / 2, -flap_thick / 2),
+            *(flap_half, -flap_half),
         ).h(
-            flap_thick / 2
+            flap_half
         ).Z()
 
         grp.append(cut_path)
 
-        grp.append(Circle(0, 0, 10))
         return grp
 
     def inner_cuts(self) -> Group:
@@ -334,42 +346,74 @@ class WatchBox(
             transform=f"translate( {self.origin.x} {self.origin.y} )",
         )
 
+        lock_tab = Point(
+            self.width / 2
+            + self.depth
+            + self.flap_thick / 2
+            + self.lock_offset_x,
+            (self.height / 2 - self.flap_thick / 2 + self.lock_offset_y),
+        )
+
         grp.extend(
             [
-                self.CircleLock.draw_slot(
-                    Point(
-                        0, (self.height / 2 + self.depth + self.flap_thick / 2)
-                    ),
-                    180,
-                    SLOT_CUT_KWARGS,
-                ),
-                self.CircleLock.draw_slot(
-                    Point(
-                        0, -(self.height / 2 + self.depth + self.flap_thick / 2)
-                    ),
-                    0,
-                    SLOT_CUT_KWARGS,
-                ),
                 self.CircleLock.draw_tab(
-                    Point(
-                        self.width / 2 + self.depth + self.flap_thick / 2,
-                        (self.height / 2 - self.flap_thick / 2),
-                    ),
+                    lock_tab,
                     0,
                     TAB_CUT_KWARGS,
                 ),
                 self.CircleLock.draw_tab(
-                    Point(
-                        self.width / 2 + self.depth + self.flap_thick / 2,
-                        -(self.height / 2 - self.flap_thick / 2),
-                    ),
+                    lock_tab.mirror_y,
                     180,
                     TAB_CUT_KWARGS,
                 ),
             ]
         )
 
+        lock_slot = Point(0, 0)
+        if self.lock_opposite:
+            lock_slot = Point(
+                -(
+                    self.width / 2
+                    + self.depth
+                    + self.flap_thick / 2
+                    + self.lock_offset_x
+                ),
+                (self.height / 2 - self.flap_thick / 2 + self.lock_offset_y),
+            )
+
+        else:
+            lock_slot = Point(
+                self.lock_offset_x,
+                (
+                    self.height / 2
+                    + self.depth
+                    + self.flap_thick / 2
+                    - self.lock_offset_y
+                ),
+            )
+
+        grp.extend(
+            [
+                self.CircleLock.draw_slot(
+                    lock_slot,
+                    0,
+                    SLOT_CUT_KWARGS,
+                ),
+                self.CircleLock.draw_slot(
+                    lock_slot.mirror_y,
+                    180,
+                    SLOT_CUT_KWARGS,
+                ),
+            ]
+        )
+
+        if self.guide:
+            zoom = Group(transform="scale(4)")
+            zoom.append(
+                self.CircleLock.draw_slot(Point(0, 0), -45, SLOT_CUT_KWARGS)
+            )
+            zoom.append(
+                self.CircleLock.draw_tab(Point(0, 0), -45, TAB_CUT_KWARGS)
+            )
+            grp.append(zoom)
         return grp
-
-
-main = main_maker(WatchBox, origin=Point(-6, -6))

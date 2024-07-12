@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from elephantbox.boxes.component.Dash import Dasher
 from elephantbox.math.Geometry import Point
+from elephantbox.support.Argumentable import akw
 from elephantbox.support.Argumentable import AKW_TYPE
 from elephantbox.support.Argumentable import Argumentable
 from elephantbox.support.Argumentable import fl_akw
@@ -18,11 +19,19 @@ class Box(Validatable, Laserable, Argumentable):
     cardstock_thickness: float
     dasher: Dasher
 
+    guide: bool
+
     @classmethod
     def dimension_arguments(cls) -> list[AKW_TYPE]:
         return super().dimension_arguments() + [
             fl_akw("--corner-saver", "-c"),
             fl_akw("--cardstock-thickness", "-s"),
+        ]
+
+    @classmethod
+    def feature_arguments(cls) -> list[AKW_TYPE]:
+        return super().feature_arguments() + [
+            akw("--guide", action="store_true"),
         ]
 
     def assertions(self) -> list[tuple[bool, str]]:

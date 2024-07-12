@@ -11,7 +11,7 @@ sqrt2over2 = sqrt(2) * 0.5
 
 
 def deg2rad(degrees: float) -> float:
-    return (degrees % 360) * pi / 180
+    return degrees * pi / 180
 
 
 @dataclass(frozen=True)
@@ -44,6 +44,10 @@ class Point:
     @property
     def mirror_x(self) -> Self:
         return type(self)(-self.x, self.y)
+
+    @property
+    def mirror_y(self) -> Self:
+        return type(self)(self.x, -self.y)
 
 
 def rotated_size(p1: Point, p2: Point) -> float:

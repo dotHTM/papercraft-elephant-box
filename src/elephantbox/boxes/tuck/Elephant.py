@@ -6,7 +6,6 @@ from drawsvg import Group
 from drawsvg import Path
 
 from elephantbox.boxes.component.Abstract import RectangularBox
-from elephantbox.cli import main_maker
 from elephantbox.math.Geometry import Point
 from elephantbox.math.Geometry import rotated_size
 from elephantbox.math.Geometry import sqrt2over2
@@ -671,9 +670,3 @@ class ElephantBox(
             cutList = []
 
         return cutList
-
-
-main = main_maker(
-    ElephantBox,
-    origin=Point(0, -6),
-)

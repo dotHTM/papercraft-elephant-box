@@ -4,19 +4,20 @@
 source venv/bin/activate
 
 watchbox \
-    -x 2.65 \
-    -y 3.65 \
-    -z 2.5 \
+    -x 2.75 \
+    -y 3.75 \
+    -z 1 \
     -s 0.25 \
-    -c 0.3 \
+    -c 0.125 \
     --lock-radius      0.5 \
-    --lock-tab-angle   20 \
-    --lock-gap-cut     0.025 \
-    --lock-fold-height 0.03 \
-    --max-dash-length  0.06 \
-    --dash-period .125 \
+    --lock-tab-angle   0 \
+    --lock-gap-cut     0.06 \
+    --lock-offset-y    0.25 \
+    --lock-offset-x    0.125 \
+    --lock-opposite \
+    --max-dash-length  0.003 \
+    --dash-period 0.3 \
     --whole-rotate 45 \
-    --draw-laser-bed \
     -o proto/watchbox
 
 
@@ -30,8 +31,8 @@ elephantbox \
     --nose-width 1 \
     --back-support 0.5 \
     --side-support 0.5 \
-    --max-dash-length .06125 \
-    --dash-period .25 \
+    --max-dash-length  0.003 \
+    --dash-period 0.3 \
     --draw-laser-bed \
     -o proto/elephantbox
 

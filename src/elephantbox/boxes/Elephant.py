@@ -673,4 +673,7 @@ class ElephantBox(
         return cutList
 
 
-main = main_maker(ElephantBox, origin=Point(0, -1800))
+main = main_maker(
+    ElephantBox,
+    origin=Point(0, -6),
+)

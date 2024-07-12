@@ -372,4 +372,4 @@ class WatchBox(
         return grp
 
 
-main = main_maker(WatchBox, origin=Point(-1800, -1800))
+main = main_maker(WatchBox, origin=Point(-6, -6))

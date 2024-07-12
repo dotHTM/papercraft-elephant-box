@@ -40,7 +40,10 @@ def output_args(parser: ArgumentParser):
 
 
 def main_maker(
-    boxType, origin: Point = Point(0, 0), laser_bed: Point = Point(3600, 3600)
+    boxType,
+    origin: Point = Point(0, 0),
+    laser_bed: Point = Point(12, 12),
+    dpi=96,
 ) -> Callable:
     def main(argv: Sequence[str] | None = None) -> int:
         import argparse
@@ -59,29 +62,31 @@ def main_maker(
         # # # # # # # # # # # # # # # # # # # # # # # # # #
 
         d = Dasher.from_args(
-            dimension_scale=300,
+            dimension_scale=dpi,
             parsed_arguments=args,
         )
 
         the_box = boxType.from_args(
             origin=Point(0, 0),
-            dimension_scale=300,
+            dimension_scale=dpi,
             dasher=d,
             parsed_arguments=args,
         )
 
+        px_origin = origin * dpi
+        px_laser_bed = laser_bed * dpi
+
         drawing = drawsvg.Drawing(
             width="100%",
             height="100%",
-            viewBox=f"{origin.x} {origin.y} {laser_bed.x} {laser_bed.y}",
-            transform="scale(300)",
+            viewBox=f"{px_origin.x} {px_origin.y} {px_laser_bed.x} {px_laser_bed.y}",
         )
 
         if args.draw_laser_bed:
             drawing.append(
                 drawsvg.Rectangle(
-                    *origin.tuple,
-                    *laser_bed.tuple,
+                    *px_origin.tuple,
+                    *px_laser_bed.tuple,
                     stroke="orange",
                     stroke_width=3,
                     fill="orange",

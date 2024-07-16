@@ -6,6 +6,7 @@ from drawsvg import Group
 from drawsvg import Path
 
 from elephantbox.boxes.component.Abstract import RectangularBox
+from elephantbox.boxes.component.Defaults import BODY_CUT_KWARGS
 from elephantbox.math.Geometry import Point
 from elephantbox.math.Geometry import rotated_size
 from elephantbox.math.Geometry import sqrt2over2
@@ -92,15 +93,15 @@ class ElephantBox(
 
     @property
     def ear_width(self) -> float:
-        return self.width - self.cardstock_thickness
+        return self.width - self.stock_thickness
 
     @property
     def head_width(self) -> float:
-        return self.width + self.cardstock_thickness
+        return self.width + self.stock_thickness
 
     @property
     def head_height(self) -> float:
-        return self.height - self.cardstock_thickness
+        return self.height - self.stock_thickness
 
     @property
     def nasial_labia(self) -> float:
@@ -120,7 +121,7 @@ class ElephantBox(
 
     @property
     def ear_start(self) -> float:
-        return self.neck_base + self.cardstock_thickness
+        return self.neck_base + self.stock_thickness
 
     @property
     def nose_start(self) -> float:
@@ -187,11 +188,7 @@ class ElephantBox(
     def cut_outline(self) -> Group:
         grp = Group()
 
-        cutPath = Path(
-            fill="#eeeeff",
-            stroke="black",
-            stroke_width=1,
-        )
+        cutPath = Path(**BODY_CUT_KWARGS)
 
         # # Body
         cutPath.M(self.body_vertical_rails[9], self.body_horizontal_rails[3]).A(
@@ -285,7 +282,7 @@ class ElephantBox(
                 *(0, 0, 0),
                 *(self.ear_flap, -self.ear_flap),
             ).h(
-                self.cardstock_thickness
+                self.stock_thickness
             )
 
         cutPath.a(
@@ -312,7 +309,7 @@ class ElephantBox(
         if 0 == self.ear_flap:
             cutPath.h(-self.head_width)
         else:
-            cutPath.h(-self.cardstock_thickness).a(
+            cutPath.h(-self.stock_thickness).a(
                 *(self.ear_flap, self.ear_flap),
                 *(0, 0, 0),
                 *(-self.ear_flap, -self.ear_flap),
@@ -497,14 +494,12 @@ class ElephantBox(
             ),
             (
                 Point(
-                    self.neck_base
-                    + self.cardstock_thickness
-                    + self.corner_saver,
+                    self.neck_base + self.stock_thickness + self.corner_saver,
                     -self.head_height / 2,
                 ),
                 Point(
                     self.neck_base
-                    + self.cardstock_thickness
+                    + self.stock_thickness
                     - self.corner_saver
                     + self.ear_width,
                     -self.head_height / 2,
@@ -512,14 +507,12 @@ class ElephantBox(
             ),
             (
                 Point(
-                    self.neck_base
-                    + self.cardstock_thickness
-                    + self.corner_saver,
+                    self.neck_base + self.stock_thickness + self.corner_saver,
                     self.head_height / 2,
                 ),
                 Point(
                     self.neck_base
-                    + self.cardstock_thickness
+                    + self.stock_thickness
                     - self.corner_saver
                     + self.ear_width,
                     self.head_height / 2,
@@ -593,14 +586,14 @@ class ElephantBox(
                     (
                         Point(
                             self.neck_base
-                            + 2 * self.cardstock_thickness
+                            + 2 * self.stock_thickness
                             + self.ear_width
                             + self.ear_flap,
                             (self.nose_width / 2 - self.corner_saver),
                         ),
                         Point(
                             self.neck_base
-                            + 2 * self.cardstock_thickness
+                            + 2 * self.stock_thickness
                             + self.ear_width
                             + self.ear_flap,
                             -(self.nose_width / 2 - self.corner_saver),
@@ -609,14 +602,14 @@ class ElephantBox(
                     (
                         Point(
                             self.neck_base
-                            + 2 * self.cardstock_thickness
+                            + 2 * self.stock_thickness
                             + self.ear_width
                             + 2 * self.ear_flap,
                             (self.nose_width / 2 - self.corner_saver),
                         ),
                         Point(
                             self.neck_base
-                            + 2 * self.cardstock_thickness
+                            + 2 * self.stock_thickness
                             + self.ear_width
                             + 2 * self.ear_flap,
                             -(self.nose_width / 2 - self.corner_saver),
@@ -653,7 +646,7 @@ class ElephantBox(
                 )
         return foldList
 
-    def cutList(self) -> SpanableList:
+    def innerCutList(self) -> SpanableList:
         cutList = [
             (
                 Point(

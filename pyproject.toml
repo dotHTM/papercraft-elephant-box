@@ -18,9 +18,9 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [project.scripts]
-elephantbox = "elephantbox.cli:ElephantBox"
-watchbox = "elephantbox.cli:WatchBox"
-
+elephantbox = "elephantbox.cli:ElephantBoxMain"
+watchbox = "elephantbox.cli:WatchBoxMain"
+fivepanelfingerbox = "elephantbox.cli:FivePanelFingerBoxMain"
 
 
 [tool.black]

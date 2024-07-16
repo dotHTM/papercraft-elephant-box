@@ -9,6 +9,10 @@ from dataclasses import dataclass
 AKW_TYPE = tuple[list[str], dict]
 
 
+def kwarg_dict(**kwargs) -> dict:
+    return kwargs
+
+
 def akw(*args, **kwargs) -> AKW_TYPE:
     return (list(args), kwargs)
 
@@ -30,6 +34,7 @@ def akw_to_attr(akw: AKW_TYPE) -> str:
 @dataclass(frozen=True)
 class Argumentable:
     parsed_arguments: Namespace | None
+    dpi: float
 
     @classmethod
     def dimension_arguments(cls) -> list[AKW_TYPE]:
@@ -51,7 +56,10 @@ class Argumentable:
     def __dimension_arguments(cls, parser: ArgumentParser):
         grp = parser.add_argument_group("Dimensions")
         for args, kwargs in cls.dimension_arguments():
-            grp.add_argument(*args, **kwargs)
+            try:
+                grp.add_argument(*args, **kwargs)
+            except Exception:
+                pass
 
     @classmethod
     def __feature_arguments(cls, parser: ArgumentParser):
@@ -81,4 +89,6 @@ class Argumentable:
                         akw_to_attr(a) for a in cls.dimension_arguments()
                     ]:
                         kwargs[key] *= dimension_scale
-        return cls(parsed_arguments=parsed_arguments, **kwargs)
+        return cls(
+            parsed_arguments=parsed_arguments, dpi=dimension_scale, **kwargs
+        )

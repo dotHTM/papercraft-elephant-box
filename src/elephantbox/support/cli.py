@@ -96,7 +96,7 @@ def main_maker(
 
         grp = drawsvg.Group(transform=f"rotate({args.whole_rotate})")
 
-        grp.append(the_box.draw())
+        grp.append(the_box.draw(enable_guides=args.debug))
         drawing.append(grp)
         drawing.save_svg(f"{args.output}.svg")
         return 0

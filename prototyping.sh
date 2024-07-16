@@ -3,12 +3,28 @@
 
 source venv/bin/activate
 
+fivepanelfingerbox \
+    --debug \
+    \
+    -x 3 \
+    -y 4 \
+    -z 1 \
+    -s 0.1 \
+    -c 0.0 \
+    \
+    --model-dash-length  1 \
+    --model-dash-period 2 \
+    \
+    --draw-laser-bed \
+    -o proto/fingerbox
+
 watchbox \
     --lock-radius      0.5 \
     --lock-tab-angle   0 \
     --lock-gap-cut     0.06 \
     --lock-offset-y    0.25 \
     --lock-offset-x    0.15 \
+    --lock-fold-height 0 \
     --lock-opposite \
     \
     -x 2.75 \
@@ -17,10 +33,11 @@ watchbox \
     -s 0.1 \
     -c 0.25 \
     \
-    --max-dash-length  0.02 \
-    --dash-period 0.4 \
+    --model-dash-length  0.02 \
+    --model-dash-period 0.4 \
     \
     --whole-rotate 45 \
+    --draw-laser-bed \
     -o proto/watchbox
 
 
@@ -36,8 +53,8 @@ elephantbox \
     -s 0.1 \
     -c 0.25 \
     \
-    --max-dash-length  0.02 \
-    --dash-period 0.4 \
+    --model-dash-length  0.02 \
+    --model-dash-period 0.4 \
     \
     --draw-laser-bed \
     -o proto/elephantbox

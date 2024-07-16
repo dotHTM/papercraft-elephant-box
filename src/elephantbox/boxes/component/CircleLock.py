@@ -20,7 +20,7 @@ class CicleLock(Validatable):
     radius: float
     tab_angle_deg: float
     gap_cut: float
-    fold_height: float
+    fold_height: float | None
 
     dasher: Dasher
 
@@ -33,7 +33,7 @@ class CicleLock(Validatable):
             (0 <= self.corner_saver, "positive corner_saver"),
             (
                 -self.fold_height <= self.gap_cut
-                if self.fold_height < 0
+                if self.fold_height is not None and self.fold_height < 0
                 else True,
                 "Real Fold solution when Fold Height is negative",
             ),
@@ -75,6 +75,8 @@ class CicleLock(Validatable):
 
     @property
     def fold_left(self) -> Point:
+        if self.fold_height is None:
+            raise Exception("No fold_height")
         position_y = self.left_slot_corner_point.y - self.fold_height
         position_x = 0
 
@@ -125,9 +127,10 @@ class CicleLock(Validatable):
 
         if self.fold_perferation:
             fold_line = Group(stroke="red", stroke_width=3)
-            fold_line.append(
-                self.dasher.span(self.fold_left.mirror_x, self.fold_left)
-            )
+            if self.fold_height is not None:
+                fold_line.append(
+                    self.dasher.span(self.fold_left.mirror_x, self.fold_left)
+                )
             grp.append(fold_line)
 
         if self.show_guides:
@@ -185,8 +188,6 @@ class CicleLock(Validatable):
 
         left = self.left_slot_corner_point
         right = self.left_slot_corner_point.mirror_x
-
-        print(self.tab_angle)
 
         cut_path.M(left.x, left.y).A(
             *(self.radius, self.radius),

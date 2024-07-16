@@ -16,7 +16,7 @@ from elephantbox.support.Validatable import Validatable
 class Box(Validatable, Laserable, Argumentable):
     origin: Point
     corner_saver: float
-    cardstock_thickness: float
+    stock_thickness: float
     dasher: Dasher
 
     guide: bool
@@ -25,7 +25,7 @@ class Box(Validatable, Laserable, Argumentable):
     def dimension_arguments(cls) -> list[AKW_TYPE]:
         return super().dimension_arguments() + [
             fl_akw("--corner-saver", "-c"),
-            fl_akw("--cardstock-thickness", "-s"),
+            fl_akw("--stock-thickness", "-s"),
         ]
 
     @classmethod

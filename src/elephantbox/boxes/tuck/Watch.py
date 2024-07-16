@@ -9,6 +9,10 @@ from drawsvg import Rectangle
 
 from elephantbox.boxes.component.Abstract import RectangularBox
 from elephantbox.boxes.component.CircleLock import CicleLock
+from elephantbox.boxes.component.Defaults import BODY_CUT_KWARGS
+from elephantbox.boxes.component.Defaults import DEBUG_OBJ_KWARGS
+from elephantbox.boxes.component.Defaults import SLOT_CUT_KWARGS
+from elephantbox.boxes.component.Defaults import TAB_CUT_KWARGS
 from elephantbox.math.Geometry import Point
 from elephantbox.math.Geometry import sqrt2over2
 from elephantbox.math.Geometry import symetric_mirrored_summation_sequence
@@ -16,34 +20,14 @@ from elephantbox.support.Argumentable import akw
 from elephantbox.support.Argumentable import AKW_TYPE
 from elephantbox.support.Argumentable import Argumentable
 from elephantbox.support.Argumentable import fl_akw
-from elephantbox.support.Laserable import Laserable
+from elephantbox.support.Laserable import Gridable
 from elephantbox.support.Laserable import SpanableList
-
-
-DEBUG_OBJ_KWARGS = {
-    "fill": "grey",
-    "stroke": "blue",
-    "stroke_width": 10,
-    "opacity": "10%",
-}
-
-TAB_CUT_KWARGS = {
-    "fill": "yellow",
-    "stroke": "blue",
-    "stroke_width": 2,
-}
-
-SLOT_CUT_KWARGS = {
-    "fill": "lime",
-    "stroke": "blue",
-    "stroke_width": 2,
-}
 
 
 @dataclass(frozen=True)
 class WatchBox(
     RectangularBox,
-    Laserable,
+    Gridable,
     Argumentable,
 ):
     lock_radius: float
@@ -203,35 +187,31 @@ class WatchBox(
         return ret
 
     def guides(self) -> Group:
-        grp = Group()
+        grp = super().guides()
 
-        lhh = None
+        dots = Group()
         for h in self.horizontal_rails:
-            lhv = None
             for v in self.vertical_rails:
-                grp.append(Circle(v, h, self.corner_saver, **DEBUG_OBJ_KWARGS))
-                if lhv is not None and lhh is not None:
-                    grp.append(
-                        Rectangle(
-                            *(lhv, lhh),
-                            *(abs(v - lhv), abs(h - lhh)),
-                            **DEBUG_OBJ_KWARGS,
-                        )
+                dots.append(
+                    Circle(
+                        *(v, h),
+                        self.corner_saver,
+                        **DEBUG_OBJ_KWARGS,
                     )
-                lhv = v
-            lhh = h
+                )
 
+        flaps = Group()
         flap_thick = self.flap_thick
         semi_flap_length = self.semi_flap_length
 
-        grp.append(
+        flaps.append(
             Rectangle(
                 *(-self.width / 2, min(self.horizontal_rails) - flap_thick),
                 *(flap_thick, flap_thick),
                 **DEBUG_OBJ_KWARGS,
             )
         )
-        grp.append(
+        flaps.append(
             Rectangle(
                 *(-self.width / 2, max(self.horizontal_rails)),
                 *(flap_thick, flap_thick),
@@ -239,7 +219,7 @@ class WatchBox(
             )
         )
 
-        grp.append(
+        flaps.append(
             Rectangle(
                 *(
                     -self.width / 2 - self.depth - flap_thick,
@@ -249,7 +229,7 @@ class WatchBox(
                 **DEBUG_OBJ_KWARGS,
             )
         )
-        grp.append(
+        flaps.append(
             Rectangle(
                 *(
                     self.width / 2 + self.depth,
@@ -260,6 +240,8 @@ class WatchBox(
             )
         )
 
+        grp.append(dots)
+        grp.append(flaps)
         return grp
 
     def cut_outline(self) -> Group:
@@ -269,11 +251,7 @@ class WatchBox(
 
         flap_half = flap_thick / 2
 
-        cut_path = Path(
-            fill="#aaaaff",
-            stroke="black",
-            stroke_width=5,
-        )
+        cut_path = Path(**BODY_CUT_KWARGS)
         cut_path.M(
             self.vertical_rails[0],
             self.horizontal_rails[1],

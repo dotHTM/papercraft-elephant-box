@@ -3,20 +3,89 @@
 
 source venv/bin/activate
 
-fivepanelfingerbox \
-    --debug \
+X=2.75
+Y=3.75
+Z=1.5
+
+
+compactfivepanelfingerbox \
     \
-    -x 3 \
-    -y 4 \
-    -z 1 \
+    -x $X \
+    -y $Y \
+    -z $Z \
     -s 0.1 \
-    -c 0.0 \
     \
-    --model-dash-length  1 \
-    --model-dash-period 2 \
+    --dash-length 0.67 \
+    --dash-period 1.5 \
+    \
+    --draw-laser-bed \
+    -o proto/compact_fingerbox
+
+compactfivepanelfingerbox \
+    \
+    -x $X \
+    -y $Z \
+    -z $Y \
+    -s 0.1 \
+    \
+    --dash-length 0.67 \
+    --dash-period 1.5 \
+    \
+    --draw-laser-bed \
+    -o proto/compact_fingerbox_top
+
+compactfivepanelfingerbox \
+    \
+    -x $Y \
+    -y $X \
+    -z $Z \
+    -s 0.1 \
+    \
+    --dash-length 0.67 \
+    --dash-period 1.5 \
+    \
+    --draw-laser-bed \
+    -o proto/compact_fingerbox_turn
+
+fivepanelfingerbox \
+    \
+    -x $X \
+    -y $Y \
+    -z $Z \
+    -s 0.1 \
+    \
+    --dash-length 0.67 \
+    --dash-period 1.5 \
     \
     --draw-laser-bed \
     -o proto/fingerbox
+
+fivepanelfingerbox \
+    \
+    -x $Y \
+    -y $X \
+    -z $Z \
+    -s 0.1 \
+    \
+    --dash-length 0.67 \
+    --dash-period 1.5 \
+    \
+    --draw-laser-bed \
+    -o proto/fingerbox_turn
+
+fivepanelfingerbox \
+    \
+    -x $X \
+    -y $Z \
+    -z $Y \
+    -s 0.1 \
+    \
+    --dash-length 0.67 \
+    --dash-period 1.5 \
+    \
+    --draw-laser-bed \
+    -o proto/finger_top
+
 
 watchbox \
     --lock-radius      0.5 \
@@ -27,14 +96,14 @@ watchbox \
     --lock-fold-height 0 \
     --lock-opposite \
     \
-    -x 2.75 \
-    -y 3.75 \
-    -z 1 \
+    -x $X \
+    -y $Y \
+    -z $Z \
     -s 0.1 \
     -c 0.25 \
     \
-    --model-dash-length  0.02 \
-    --model-dash-period 0.4 \
+    --dash-length 0.02 \
+    --dash-period 0.4 \
     \
     --whole-rotate 45 \
     --draw-laser-bed \
@@ -47,14 +116,14 @@ elephantbox \
     --back-support 0.5 \
     --side-support 0.5 \
     \
-    -x 2.75 \
-    -y 3.75 \
-    -z 1 \
+    -x $X \
+    -y $Y \
+    -z $Z \
     -s 0.1 \
     -c 0.25 \
     \
-    --model-dash-length  0.02 \
-    --model-dash-period 0.4 \
+    --dash-length 0.02 \
+    --dash-period 0.4 \
     \
     --draw-laser-bed \
     -o proto/elephantbox

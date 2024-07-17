@@ -16,11 +16,9 @@ def debug_args(parser: ArgumentParser):
         "--debug",
         action="store_true",
     )
-    debug_options.add_argument(
-        "--debug-precision",
-        type=int,
-        default=4,
-    )
+    # debug_options.add_argument(
+    #     "--debug-precision", type=int, default=4, metavar="DIGITS"
+    # )
 
 
 def output_args(parser: ArgumentParser):
@@ -51,7 +49,12 @@ def main_maker(
         parser = argparse.ArgumentParser()
 
         debug_args(parser)
-        parser.add_argument("--whole-rotate", type=float, default=0)
+        parser.add_argument(
+            "--whole-rotate",
+            type=float,
+            default=0,
+            metavar="ANGLE",
+        )
         parser.add_argument("--draw-laser-bed", action="store_true")
         boxType.add_arguments(parser)
         Dasher.add_arguments(parser)

@@ -24,7 +24,10 @@ def fl_akw(*args, **kwargs) -> AKW_TYPE:
     return (list(args), kwargs)
 
 
-def akw_to_attr(akw: AKW_TYPE) -> str:
+def akw_dest(akw: AKW_TYPE) -> str:
+    if "dest" in akw[1]:
+        return akw[1]["dest"]
+
     string = akw[0][0]
     string = re.sub(r"^--", r"", string)
     string = re.sub(r"-", r"_", string)
@@ -35,6 +38,12 @@ def akw_to_attr(akw: AKW_TYPE) -> str:
 class Argumentable:
     parsed_arguments: Namespace | None
     dpi: float
+    debug: bool
+
+    @classmethod
+    @property
+    def meta_name(cls) -> str:
+        return ""
 
     @classmethod
     def dimension_arguments(cls) -> list[AKW_TYPE]:
@@ -42,19 +51,21 @@ class Argumentable:
 
     @classmethod
     def feature_arguments(cls) -> list[AKW_TYPE]:
-        return []
+        return [
+            akw("--debug"),
+        ]
 
     @classmethod
     def object_init_args(cls) -> list[str]:
         keys = set[str]()
 
-        keys.update([akw_to_attr(arg) for arg in cls.dimension_arguments()])
-        keys.update([akw_to_attr(arg) for arg in cls.feature_arguments()])
+        keys.update([akw_dest(arg) for arg in cls.dimension_arguments()])
+        keys.update([akw_dest(arg) for arg in cls.feature_arguments()])
         return list(keys)
 
     @classmethod
     def __dimension_arguments(cls, parser: ArgumentParser):
-        grp = parser.add_argument_group("Dimensions")
+        grp = parser.add_argument_group(f"{cls.meta_name} Dimensions")
         for args, kwargs in cls.dimension_arguments():
             try:
                 grp.add_argument(*args, **kwargs)
@@ -63,9 +74,12 @@ class Argumentable:
 
     @classmethod
     def __feature_arguments(cls, parser: ArgumentParser):
-        grp = parser.add_argument_group("Features")
+        grp = parser.add_argument_group(f"{cls.meta_name} Features")
         for args, kwargs in cls.feature_arguments():
-            grp.add_argument(*args, **kwargs)
+            try:
+                grp.add_argument(*args, **kwargs)
+            except Exception:
+                pass
 
     @classmethod
     def add_arguments(cls, parser: ArgumentParser):
@@ -85,9 +99,7 @@ class Argumentable:
             if key not in kwargs:
                 if key in cls.object_init_args():
                     kwargs[key] = value
-                    if key in [
-                        akw_to_attr(a) for a in cls.dimension_arguments()
-                    ]:
+                    if key in [akw_dest(a) for a in cls.dimension_arguments()]:
                         kwargs[key] *= dimension_scale
         return cls(
             parsed_arguments=parsed_arguments, dpi=dimension_scale, **kwargs

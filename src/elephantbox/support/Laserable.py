@@ -76,11 +76,20 @@ class Gridable(Laserable):
     def guides(self) -> Group:
         grp = super().guides()
         grid = Group()
+        dots = Group()
 
         lhh = None
         for h in self.horizontal_rails:
             lhv = None
             for v in self.vertical_rails:
+                # dots.append(
+                #     Circle(
+                #         v,
+                #         h,
+                #         5,
+                #         **DEBUG_OBJ_KWARGS,
+                #     )
+                # )
                 if lhv is not None and lhh is not None:
                     grid.append(
                         Rectangle(
@@ -93,4 +102,5 @@ class Gridable(Laserable):
             lhh = h
 
         grp.append(grid)
+        grp.append(dots)
         return grp

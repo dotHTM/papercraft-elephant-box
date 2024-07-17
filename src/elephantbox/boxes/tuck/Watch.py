@@ -7,7 +7,7 @@ from drawsvg import Group
 from drawsvg import Path
 from drawsvg import Rectangle
 
-from elephantbox.boxes.component.Abstract import RectangularBox
+from elephantbox.boxes.component.Abstract import RectangularTuckBox
 from elephantbox.boxes.component.CircleLock import CicleLock
 from elephantbox.boxes.component.Defaults import BODY_CUT_KWARGS
 from elephantbox.boxes.component.Defaults import DEBUG_OBJ_KWARGS
@@ -26,7 +26,7 @@ from elephantbox.support.Laserable import SpanableList
 
 @dataclass(frozen=True)
 class WatchBox(
-    RectangularBox,
+    RectangularTuckBox,
     Gridable,
     Argumentable,
 ):

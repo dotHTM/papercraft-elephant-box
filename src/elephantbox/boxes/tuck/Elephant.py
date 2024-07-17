@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from drawsvg import Group
 from drawsvg import Path
 
-from elephantbox.boxes.component.Abstract import RectangularBox
+from elephantbox.boxes.component.Abstract import RectangularTuckBox
 from elephantbox.boxes.component.Defaults import BODY_CUT_KWARGS
 from elephantbox.math.Geometry import Point
 from elephantbox.math.Geometry import rotated_size
@@ -19,7 +19,7 @@ from elephantbox.support.Laserable import SpanableList
 
 @dataclass(frozen=True)
 class ElephantBox(
-    RectangularBox,
+    RectangularTuckBox,
     Laserable,
     Argumentable,
 ):

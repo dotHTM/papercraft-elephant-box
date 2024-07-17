@@ -3,10 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import ceil
 
+from drawsvg import Circle
 from drawsvg import Group
 from drawsvg import Line
 from drawsvg import Path
 
+from elephantbox.boxes.component.Defaults import DEBUG_OBJ_KWARGS
 from elephantbox.math.Geometry import Point
 from elephantbox.math.Geometry import Segment
 from elephantbox.support.Argumentable import AKW_TYPE
@@ -22,10 +24,15 @@ class Dasher(Validatable, Argumentable):
     stock_thickness: float
 
     @classmethod
+    @property
+    def meta_name(cls) -> str:
+        return "Dash"
+
+    @classmethod
     def dimension_arguments(cls) -> list[AKW_TYPE]:
         return super().dimension_arguments() + [
-            fl_akw("--model-dash-length"),
-            fl_akw("--model-dash-period"),
+            fl_akw("--dash-length", dest="model_dash_length"),
+            fl_akw("--dash-period", dest="model_dash_period"),
             fl_akw("--stock-thickness"),
         ]
 
@@ -48,7 +55,8 @@ class Dasher(Validatable, Argumentable):
         dash_line = []
 
         period_count = ceil(
-            (segment.length - self.model_dash_length) / self.model_dash_period
+            (segment.length - self.model_dash_length + 0.001)
+            / self.model_dash_period
         )
         model_length = (
             self.model_dash_length + period_count * self.model_dash_period
@@ -68,9 +76,9 @@ class Dasher(Validatable, Argumentable):
 
             dash_line.append(Segment(start, end))
 
-        print(segment.angle)
-        print(actual_dash_length_vector)
-        print(actual_period_vector)
+        # print(segment.angle)
+        # print(actual_dash_length_vector)
+        # print(actual_period_vector)
 
         return dash_line
 
@@ -96,17 +104,24 @@ class Dasher(Validatable, Argumentable):
                 )
             )
 
+        if self.debug:
+            dashes.append(Circle(*origin.tuple, 5, **DEBUG_OBJ_KWARGS))
+            dashes.append(Circle(*destination.tuple, 5, **DEBUG_OBJ_KWARGS))
+
         return dashes
 
     def drive_zigzag(
         self,
         path: Path,
         segment: Segment,
+        invert: bool = False,
     ) -> Path:
         self.validate()
         ortho_delta = Point.polar(
             self.stock_thickness, segment.delta.angle_ortho
         )
+        if invert:
+            ortho_delta *= -1
         path.L(*segment.start.tuple)
         last_endpoint = None
         for dash in self.span_sequence(segment):
@@ -123,13 +138,21 @@ class Dasher(Validatable, Argumentable):
     def zigzag(
         self,
         segment: Segment,
+        invert: bool = False,
         **kwargs,
     ) -> Group:
         dashes = Group()
 
         cut_path = Path(**kwargs)
         cut_path.M(*segment.start.tuple)
-        self.drive_zigzag(cut_path, segment)
+        self.drive_zigzag(
+            path=cut_path,
+            segment=segment,
+            invert=invert,
+        )
+        if self.debug:
+            dashes.append(Circle(*segment.start.tuple, 5, **DEBUG_OBJ_KWARGS))
+            dashes.append(Circle(*segment.end.tuple, 5, **DEBUG_OBJ_KWARGS))
 
         dashes.append(cut_path)
         return dashes

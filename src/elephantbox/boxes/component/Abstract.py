@@ -15,16 +15,19 @@ from elephantbox.support.Validatable import Validatable
 @dataclass(frozen=True)
 class Box(Validatable, Laserable, Argumentable):
     origin: Point
-    corner_saver: float
     stock_thickness: float
     dasher: Dasher
 
     guide: bool
 
     @classmethod
+    @property
+    def meta_name(cls) -> str:
+        return "Box"
+
+    @classmethod
     def dimension_arguments(cls) -> list[AKW_TYPE]:
         return super().dimension_arguments() + [
-            fl_akw("--corner-saver", "-c"),
             fl_akw("--stock-thickness", "-s"),
         ]
 
@@ -32,11 +35,6 @@ class Box(Validatable, Laserable, Argumentable):
     def feature_arguments(cls) -> list[AKW_TYPE]:
         return super().feature_arguments() + [
             akw("--guide", action="store_true"),
-        ]
-
-    def assertions(self) -> list[tuple[bool, str]]:
-        return super().assertions() + [
-            (0 <= self.corner_saver, "Corner Saver -ge Zero")
         ]
 
 
@@ -59,4 +57,20 @@ class RectangularBox(Box):
             (0 < self.width, "Width -gt Zero"),
             (0 < self.height, "Height -gt Zero"),
             (0 < self.depth, "Depth -gt Zero"),
+        ]
+
+
+@dataclass(frozen=True)
+class RectangularTuckBox(RectangularBox):
+    corner_saver: float
+
+    @classmethod
+    def dimension_arguments(cls) -> list[AKW_TYPE]:
+        return super().dimension_arguments() + [
+            fl_akw("--corner-saver", "-c"),
+        ]
+
+    def assertions(self) -> list[tuple[bool, str]]:
+        return super().assertions() + [
+            (0 <= self.corner_saver, "Corner Saver -ge Zero")
         ]

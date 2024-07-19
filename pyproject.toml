@@ -21,7 +21,8 @@ where = ["src"]
 elephantbox = "elephantbox.cli:ElephantBoxMain"
 watchbox = "elephantbox.cli:WatchBoxMain"
 fivepanelfingerbox = "elephantbox.cli:FivePanelFingerBoxMain"
-compactfivepanelfingerbox = "elephantbox.cli:CompactFivePanelFingerBoxMain"
+compacttallfivepanelfingerbox = "elephantbox.cli:CompactTallFivePanelFingerBoxMain"
+compactwidefivepanelfingerbox = "elephantbox.cli:CompactWideFivePanelFingerBoxMain"
 
 
 [tool.black]
